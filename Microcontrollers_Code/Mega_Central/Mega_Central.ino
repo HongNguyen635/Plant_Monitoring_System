@@ -25,7 +25,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 void setup() 
 {
   BTSerial.begin(38400);
-
+  Serial.begin(9600);
   lcd.backlight();
   lcd.init(); 
 }
@@ -56,8 +56,8 @@ void loop()
   // int photocell = requestPhotocell();
   // Serial.println(photocell);
 
-  int Temp = requestTemp();
-  Serial.println(Temp);
+  // int Temp = requestTemp();
+  // Serial.println(Temp);
 
   // bool IR1 = requestIR1();
   // if (IR1) {
