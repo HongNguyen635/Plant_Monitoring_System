@@ -9,10 +9,265 @@
     <script type="module" src="js/main.js"></script>
 </head>
 
-<body>
-    <header class="w-screen sticky top-0 z-1">
-        <p class="text-5xl">Hello</p>
+<body class="bg-emerald-50">
+    <header class="bg-green-900 text-white top-0 sticky">
+        <section class="max-w-4xl flex mx-auto p-3 px-6 justify-center items-center">
+            <h1 class="text-3xl font-roboto font-medium">
+                <a href="#sensor">Plant Monitoring Dashboard</a>
+            </h1>
+        </section>
     </header>
+
+    <main class="max-w-5xl mx-auto">
+        <section id="settings" class="p-8 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-6 text-black ">Configurations</h2>
+            <div class="flex flex-row justify-between">
+                <div class="px-4"><b>Air Temperature</b> (update every: <span id="air-temp-slider">0</span> s):</div>
+
+                <input type="range" min="1" max="86400" value="0" width="0%" oninput="updateAirTempSlider(this.value)"
+                    class="px-4 w-3/5 accent-emerald-500" />
+            </div>
+
+            <div class="flex flex-row justify-between">
+                <div class="px-4"><b>Soil Sensor</b> (update every: <span id="soil-slider">0</span> s):</div>
+
+                <input type="range" min="1" max="86400" value="0" width="0%" oninput="updateSoilSlider(this.value)"
+                    class="px-4 w-3/5 accent-emerald-500" />
+            </div>
+
+            <div class="flex flex-row justify-between">
+                <div class="px-4"><b>Photocell Sensor</b> (update every: <span id="photocell-slider">0</span> hr):</div>
+
+                <input type="range" min="1" max="24" value="0" width="0%" oninput="updatePhotocellSlider(this.value)"
+                    class="px-4 w-3/5 accent-emerald-500" />
+            </div>
+
+            <div class="flex justify-center">
+                <button type="button"
+                    class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                    id="config-btn" onclick="configBtnPress()">Save
+                </button>
+            </div>
+        </section>
+
+        <section id="sensor" class="p-6 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-6 text-black ">Sensor Readings</h2>
+            <ul
+                class="list-none mx-auto flex flex-col sm:flex-row flex-wrap justify-center items-center sm:items-start gap-8">
+
+                <!-- Air Temperature -->
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Air Temperature</h3>
+                        <h3 class="text-2xl font-semibold">&#x1F321;</h3>
+
+                    </div>
+
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Current:
+                        </span>
+                        <span id="air-temp-c">
+                            0
+                        </span>
+                        <span>
+                            &deg;C
+                        </span>
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Current:
+                        </span>
+                        <span id="air-temp-f">
+                            0
+                        </span>
+                        <span>
+                            &deg;F
+                        </span>
+                    </div>
+
+                    <button type="button"
+                        class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                        id="air-temp-btn" onclick="airTempBtnPress()">Update Now!
+                    </button>
+
+                </li>
+
+                <!-- Moisture Sensor -->
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Soil</h3>
+                        <h3 class="text-3xl font-semibold">&#129716;</h3>
+
+                    </div>
+
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Moisture:
+                        </span>
+                        <span id="soil-moisture">
+                            0
+                        </span>
+                        <span>
+                            %
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Temperature:
+                        </span>
+                        <span id="soil-temp-c">
+                            0
+                        </span>
+                        <span>
+                            &deg;C
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Temperature:
+                        </span>
+                        <span id="soil-temp-f">
+                            0
+                        </span>
+                        <span>
+                            &deg;F
+                        </span>
+                    </div>
+
+                    <button type="button"
+                        class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                        id="soil-btn" onclick="soilBtnPress()">Update Now!
+                    </button>
+
+                </li>
+
+                <!-- Photocell -->
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Environment</h3>
+                        <h3 class="text-2xl font-semibold">&#127763;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Current:
+                        </span>
+                        <span id="photocell">
+                            Dark
+                        </span>
+                    </div>
+
+                    <button type="button"
+                        class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                        id="photocell-btn" onclick="photocellBtnPress()">Update Now!
+                    </button>
+                </li>
+
+                <!-- ir sensors -->
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Intrusion Detection</h3>
+                        <h3 class="text-2xl font-semibold">&#9888;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Current Status:
+                        </span>
+                        <span id="ir-sensor">
+                            Clear
+                        </span>
+                    </div>
+
+                    <button type="button"
+                        class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                        id="ir-btn" onclick="irBtnPress()">Update Now!
+                    </button>
+                </li>
+
+
+                <!-- sensor list item template -->
+                <!-- <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Title</h3>
+                        <h3 class="text-2xl font-semibold">Icon</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Description:
+                        </span>
+                        <span id="id-name">
+                            0
+                        </span>
+                        <span>
+                            Unit
+                        </span>
+                    </div>
+
+                    <button type="button"
+                        class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                        id="btn" onclick="ButtonPress1()">Update Now!
+                    </button>
+                </li> -->
+            </ul>
+        </section>
+
+        <section id="status" class="p-6 my-12 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-6 text-black ">Status Update</h2>
+            <ul
+                class="list-none mx-auto flex flex-col sm:flex-row flex-wrap justify-center items-center sm:items-start gap-8">
+
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Watering</h3>
+                        <h3 class="text-2xl font-semibold">&#128167;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Last watering time:
+                        </span>
+                        <span id="watering-time">
+                            0
+                        </span>
+                        <span>
+                            hr ago
+                        </span>
+                    </div>
+
+                    <button type="button"
+                        class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                        id="watering-btn" onclick="wateringBtnPress()">Water Now!
+                    </button>
+                </li>
+
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">LED Grow Light</h3>
+                        <h3 class="text-2xl font-semibold">&#128161;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Current:
+                        </span>
+                        <span id="grow-light">
+                            Off
+                        </span>
+                    </div>
+
+                    <button type="button"
+                        class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                        id="grow-light-btn" onclick="growLightBtnPress()">Toggle
+                    </button>
+                </li>
+            </ul>
+        </section>
+    </main>
 </body>
 
 </html>
