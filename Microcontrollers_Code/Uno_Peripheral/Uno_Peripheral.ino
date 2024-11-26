@@ -39,7 +39,7 @@ void setup()
   pinMode(photocellPin, INPUT);
   pinMode(temperaturePin, INPUT);
 
-  ss.begin(0x36);
+  // ss.begin(0x36);
   // OUTPUT
   pinMode(buzzerPin, OUTPUT);
 
@@ -112,7 +112,7 @@ void loop()
       // send first byte
       BTSerial.write(hi);
       // wait for ack
-      while (!BTSerial.available()) {}
+      // while (!BTSerial.available()) {}
       // send second byte
       BTSerial.write(lo);
     } else if (BT == TEMP_CHAR) {

@@ -1,5 +1,5 @@
 //this is master
-
+#include <TimerOne.h>
 #include <SoftwareSerial.h>
 #include <LiquidCrystal_I2C.h>
 
@@ -15,6 +15,23 @@
 #define IR_SENSOR1 'E'
 #define IR_SENSOR2 'F'
 
+int counter = 0;
+
+int photocellReading = 0;
+int tempReading = 0;
+int moistureReading = 0;
+int tempSoilReading = 0;
+
+int photocellPeriod = 1;
+int tempPeriod = 2;
+int moisturePeriod = 3;
+int tempSoilPeriod = 4;
+
+bool readPhotocell = false;
+bool readTemp = false;
+bool readMoisture = false;
+bool readTempSoil = false;
+
 // setup bluetooth
 SoftwareSerial BTSerial(12, 2); // RX, TX
 
@@ -28,6 +45,11 @@ void setup()
   Serial.begin(9600);
   lcd.backlight();
   lcd.init(); 
+  // Serial.println("works");
+  Timer1.initialize(1000000);
+  // Serial.println("works");
+  Timer1.attachInterrupt(sensorCheck);
+  Serial.println("works");
 }
 
 // test communication to uno
@@ -68,18 +90,54 @@ void loop()
   // if (IR2) {
   //   Serial.println("object present");
   // }
+  if (readPhotocell) {
+    Serial.println(photocellReading);
+    readPhotocell = false;
+  }
+  if (readTemp) {
+    Serial.println(tempReading);
+    readTemp = false;
+  }
+  if (readMoisture) {
+    Serial.println(moistureReading);
+    readMoisture = false;
+  }
+  if (readTempSoil) {
+    Serial.println(tempSoilReading);
+    readTempSoil = false;
+  }
+  // Serial.println(counter);
 }
 
+void sensorCheck(void) {
+  counter++;
+  if (counter % photocellPeriod == 0) {
+    requestPhotocell();
+    readPhotocell = true;
+  }
+  if ((counter % tempPeriod) == 0) {
+    requestTemp();
+    readTemp = true;
+  }
+  if (counter % moisturePeriod == 0) {
+    requestMoisture();
+    readMoisture = true;
+  }
+  if (counter % tempSoilPeriod == 0) {
+    requestTempSoil();
+    readTempSoil = true;
+  } 
+}
 
-int requestPhotocell() {
+void requestPhotocell(void) {
   BTSerial.write(PHOTOCELL_CHAR);
-  while (!BTSerial.available()) {}
+  // while (!BTSerial.available()) {}
   uint8_t hi = BTSerial.read();
-  BTSerial.write('0');
-  while (!BTSerial.available()) {}
+  // BTSerial.write('0');
+  // while (!BTSerial.available()) {}
   uint8_t lo = BTSerial.read();
   uint16_t BT = (hi << 8) + lo;
-  return BT;
+  photocellReading = BT;
 }
 
 bool requestIR1() {
@@ -96,17 +154,17 @@ bool requestIR2() {
   return !(BT == 'H');
 }
 
-int requestTemp() {
+void requestTemp(void) {
   BTSerial.write(TEMP_CHAR);
-  while (!BTSerial.available()) {}
+  // while (!BTSerial.available()) {}
   int BT = BTSerial.read();
-  return BT;
+  tempReading = BT;
 }
 
-int requestTempSoil() {
-
+void requestTempSoil(void) {
+  tempSoilReading = 0;
 }
 
-int requestMoisture() {
-
+void requestMoisture(void) {
+  moistureReading = 0;
 }
