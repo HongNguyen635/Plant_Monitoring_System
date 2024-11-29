@@ -112,7 +112,7 @@ void loop()
       // send first byte
       BTSerial.write(hi);
       // wait for ack
-      // while (!BTSerial.available()) {}
+      while (!BTSerial.available()) {}
       // send second byte
       BTSerial.write(lo);
     } else if (BT == TEMP_CHAR) {
@@ -144,7 +144,7 @@ void loop()
       }
     } else {
       // command char not recognized, do nothing
-      Serial.println("char not recognized");
+      // Serial.println("char not recognized");
     }
   }
 }
