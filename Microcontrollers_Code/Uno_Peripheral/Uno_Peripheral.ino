@@ -58,42 +58,42 @@ void loop()
   // }
 
 
-  if (objectPresentSensor1) {
-    if (digitalRead(irSensor1) == LOW) {
-      Serial.println("object");
+  // if (objectPresentSensor1) {
+  //   if (digitalRead(irSensor1) == LOW) {
+  //     Serial.println("object");
 
-          // buzzer
-          tone(buzzerPin, 100);
-          delay(1000);
-          noTone(buzzerPin); 
-    }
-    else {
-        Serial.println("false alarm");
-    }
+  //         // buzzer
+  //         tone(buzzerPin, 100);
+  //         delay(1000);
+  //         noTone(buzzerPin); 
+  //   }
+  //   else {
+  //       Serial.println("false alarm");
+  //   }
     
-          objectPresentSensor1 = false;
-    // reattch to interrupt to detect object after beeps
-    //attachInterrupt(digitalPinToInterrupt(irSensor1), irSensor1_ISR, FALLING); 
-  }
-  else {
-    Serial.println("no object");
-  }
+  //         objectPresentSensor1 = false;
+  //   // reattch to interrupt to detect object after beeps
+  //   //attachInterrupt(digitalPinToInterrupt(irSensor1), irSensor1_ISR, FALLING); 
+  // }
+  // else {
+  //   Serial.println("no object");
+  // }
 
-  if (objectPresentSensor2) {
-  Serial.println("object");
-  objectPresentSensor2 = false;
+  // if (objectPresentSensor2) {
+  // Serial.println("object");
+  // objectPresentSensor2 = false;
 
-  // buzzer
-  tone(buzzerPin, 100);
-  delay(1000);
-  noTone(buzzerPin); 
+  // // buzzer
+  // tone(buzzerPin, 100);
+  // delay(1000);
+  // noTone(buzzerPin); 
 
 
-  // reattch to interrupt to detect object after beeps
-  attachInterrupt(digitalPinToInterrupt(irSensor2), irSensor2_ISR, FALLING); 
-  }
+  // // reattch to interrupt to detect object after beeps
+  // attachInterrupt(digitalPinToInterrupt(irSensor2), irSensor2_ISR, FALLING); 
+  // }
 
-  Serial.println(digitalRead(irSensor1));
+  // Serial.println(digitalRead(irSensor1));
 
   // ------------ TODO: FIX ABOVE CODE LATER ----------
 
@@ -117,7 +117,8 @@ void loop()
       BTSerial.write(lo);
     } else if (BT == TEMP_CHAR) {
       // data send protocol for the temperature sensor
-      BTSerial.write(analogRead(temperaturePin));
+      uint8_t tempReading = analogRead(temperaturePin);
+      BTSerial.write(tempReading);
     } else if (BT == MOISTURE_CHAR) {
       // data send protocol for the moisture sensor
       BTSerial.write(MOISTURE_CHAR);

@@ -91,42 +91,50 @@ void loop()
   //   Serial.println("object present");
   // }
   if (readPhotocell) {
+    requestPhotocell();
+    Serial.print("Photocell Reading: ");
     Serial.println(photocellReading);
     readPhotocell = false;
   }
   if (readTemp) {
+    requestTemp();
+    Serial.print("temperature Reading: ");
     Serial.println(tempReading);
     readTemp = false;
   }
   if (readMoisture) {
+    requestMoisture();
+    Serial.print("moisture Reading: ");
     Serial.println(moistureReading);
     readMoisture = false;
   }
   if (readTempSoil) {
+    requestTempSoil();
+    Serial.print("soil temp Reading: ");
     Serial.println(tempSoilReading);
     readTempSoil = false;
   }
-  // Serial.println(counter);
 }
 
 void sensorCheck(void) {
   counter++;
-  if (counter % photocellPeriod == 0) {
-    requestPhotocell();
+  if ((counter % photocellPeriod == 0)) {
+    // requestPhotocell();
     readPhotocell = true;
   }
-  if ((counter % tempPeriod) == 0) {
-    requestTemp();
+  if ((counter % tempPeriod == 0)) {
+    // requestTemp();
     readTemp = true;
   }
-  if (counter % moisturePeriod == 0) {
-    requestMoisture();
+  if ((counter % moisturePeriod == 0)) {
+    // requestMoisture();
     readMoisture = true;
   }
-  if (counter % tempSoilPeriod == 0) {
-    requestTempSoil();
+  if ((counter % tempSoilPeriod == 0)) {
+    // requestTempSoil();
     readTempSoil = true;
   } 
+  Serial.println();
 }
 
 void requestPhotocell(void) {
