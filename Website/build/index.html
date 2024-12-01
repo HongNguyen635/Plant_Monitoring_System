@@ -20,25 +20,26 @@
 
     <main class="max-w-5xl mx-auto">
         <section id="settings" class="p-8 scroll-mt-20">
-            <h2 class="text-3xl font-bold text-center mb-6 text-black ">Configurations</h2>
+            <h2 class="text-3xl font-bold text-center mb-2 text-black ">Configurations</h2>
+            <p class="text-center mb-2"><i>Note: An update rate of 0 means the sensor is disabled</i></p>
             <div class="flex flex-row justify-between">
                 <div class="px-4"><b>Air Temperature</b> (update every: <span id="air-temp-slider">0</span> s):</div>
 
-                <input type="range" min="1" max="86400" value="0" width="0%" oninput="updateAirTempSlider(this.value)"
+                <input type="range" min="0" max="3600" value="0" width="0%" oninput="updateAirTempSlider(this.value)"
                     class="px-4 w-3/5 accent-emerald-500" />
             </div>
 
             <div class="flex flex-row justify-between">
                 <div class="px-4"><b>Soil Sensor</b> (update every: <span id="soil-slider">0</span> s):</div>
 
-                <input type="range" min="1" max="86400" value="0" width="0%" oninput="updateSoilSlider(this.value)"
+                <input type="range" min="0" max="3600" value="0" width="0%" oninput="updateSoilSlider(this.value)"
                     class="px-4 w-3/5 accent-emerald-500" />
             </div>
 
             <div class="flex flex-row justify-between">
-                <div class="px-4"><b>Photocell Sensor</b> (update every: <span id="photocell-slider">0</span> hr):</div>
+                <div class="px-4"><b>Photocell Sensor</b> (update every: <span id="photocell-slider">0</span> s):</div>
 
-                <input type="range" min="1" max="24" value="0" width="0%" oninput="updatePhotocellSlider(this.value)"
+                <input type="range" min="0" max="3600" value="0" width="0%" oninput="updatePhotocellSlider(this.value)"
                     class="px-4 w-3/5 accent-emerald-500" />
             </div>
 
@@ -63,17 +64,6 @@
 
                     </div>
 
-                    <div class="flex justify-between mt-2">
-                        <span>
-                            Current:
-                        </span>
-                        <span id="air-temp-c">
-                            0
-                        </span>
-                        <span>
-                            &deg;C
-                        </span>
-                    </div>
                     <div class="flex justify-between mt-2">
                         <span>
                             Current:
@@ -110,18 +100,6 @@
                         </span>
                         <span>
                             %
-                        </span>
-                    </div>
-
-                    <div class="flex justify-between mt-2">
-                        <span>
-                            Temperature:
-                        </span>
-                        <span id="soil-temp-c">
-                            0
-                        </span>
-                        <span>
-                            &deg;C
                         </span>
                     </div>
 
@@ -181,12 +159,101 @@
                             Clear
                         </span>
                     </div>
-
-                    <button type="button"
-                        class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
-                        id="ir-btn" onclick="irBtnPress()">Update Now!
-                    </button>
                 </li>
+
+
+                <!-- air quality sensor -->
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Air Quality</h3>
+                        <h3 class="text-2xl font-semibold">&#127811;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Air Quality Index:
+                        </span>
+                        <span id="air-quality-sensor">
+                            0
+                        </span>
+                    </div>
+                </li>
+
+                <!-- humidity sensor -->
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Humidity</h3>
+                        <h3 class="text-2xl font-semibold">&#9729;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Current:
+                        </span>
+                        <span id="humidity-sensor">
+                            0
+                        </span>
+                        <span>
+                            %
+                        </span>
+                    </div>
+                </li>
+
+                <!-- sound sensor -->
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Sound Detection</h3>
+                        <h3 class="text-2xl font-semibold">&#128266;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Total noise detected:
+                        </span>
+                        <span id="sound-sensor">
+                            0
+                        </span>
+                        <span>
+                            times
+                        </span>
+                    </div>
+                </li>
+
+                <!-- smoke sensor -->
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Smoke Detection</h3>
+                        <h3 class="text-2xl font-semibold">&#128684;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Current Status
+                        </span>
+                        <span id="smoke-sensor">
+                            Clear
+                        </span>
+                    </div>
+                </li>
+
+                <!-- flame sensor -->
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Flame Detection</h3>
+                        <h3 class="text-2xl font-semibold">&#128293;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Current Status
+                        </span>
+                        <span id="flame-sensor">
+                            Clear
+                        </span>
+                    </div>
+                </li>
+
+
 
 
                 <!-- sensor list item template -->
@@ -217,7 +284,7 @@
         </section>
 
         <section id="status" class="p-6 my-12 scroll-mt-20">
-            <h2 class="text-3xl font-bold text-center mb-6 text-black ">Status Update</h2>
+            <h2 class="text-3xl font-bold text-center mb-6 text-black ">Commands</h2>
             <ul
                 class="list-none mx-auto flex flex-col sm:flex-row flex-wrap justify-center items-center sm:items-start gap-8">
 
@@ -229,13 +296,7 @@
                     </div>
                     <div class="flex justify-between mt-2">
                         <span>
-                            Last watering time:
-                        </span>
-                        <span id="watering-time">
-                            0
-                        </span>
-                        <span>
-                            hr ago
+                            Turn on water pump for 5s
                         </span>
                     </div>
 
@@ -265,9 +326,365 @@
                         id="grow-light-btn" onclick="growLightBtnPress()">Toggle
                     </button>
                 </li>
+
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">LED Brightness</h3>
+                        <h3 class="text-2xl font-semibold">&#128161;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Current:
+                        </span>
+                        <span id="brightness-light">
+                            Bright
+                        </span>
+                    </div>
+
+                    <button type="button"
+                        class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                        id="brightness-btn" onclick="lightBrightnessBtnPress()">Toggle
+                    </button>
+                </li>
+
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">LED Color</h3>
+                        <h3 class="text-2xl font-semibold">&#128161;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Current Color:
+                        </span>
+                        <span id="light-color">
+                            RGB
+                        </span>
+                    </div>
+
+                    <div class="flex justify-center flex-wrap gap-2">
+                        <button type="button"
+                            class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-2 self-center"
+                            id="red-btn" onclick="lightRedBtnPress()">Red
+                        </button>
+
+                        <button type="button"
+                            class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-2 self-center"
+                            id="green-btn" onclick="lightGreenBtnPress()">Green
+                        </button>
+
+                        <button type="button"
+                            class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-2 self-center"
+                            id="blue-btn" onclick="lightBlueBtnPress()">Blue
+                        </button>
+
+                        <button type="button"
+                            class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-2 self-center"
+                            id="rgb-btn" onclick="rgbBtnPress()">Blinking RGB
+                        </button>
+                    </div>
+
+                </li>
+
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Buzzer</h3>
+                        <h3 class="text-2xl font-semibold">&#128276;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Turn on warning buzzer for 2s
+                        </span>
+                    </div>
+
+                    <button type="button"
+                        class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                        id="buzzer-btn" onclick="buzzerBtnPress()">Beep Now!
+                    </button>
+                </li>
+
+                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
+                    <div class="flex justify-between">
+                        <h3 class="mt-2 text-xl font-semibold">Display</h3>
+                        <h3 class="text-2xl font-semibold">&#128223;</h3>
+
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Write a system-generated message to the display or clear it
+                        </span>
+                    </div>
+
+                    <div class="flex justify-center flex-wrap gap-2">
+                        <button type="button"
+                            class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                            id="display-write-btn" onclick="writeBtnPress()">Write
+                        </button>
+
+                        <button type="button"
+                            class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
+                            id="display-clear-btn" onclick="clearBtnPress()">Clear
+                        </button>
+                    </div>
+                </li>
             </ul>
         </section>
     </main>
 </body>
+
+<script>
+    // global variable visible to all javascript functions
+    var xmlHttp = createXmlHttpObject();
+
+    // var save the config values (not sent yet)
+    var airTempRate = 1;
+    var soilRate = 1;
+    var photocellRate = 1;
+
+    // function to create XML object
+    function createXmlHttpObject() {
+        if (window.XMLHttpRequest) {
+            xmlHttp = new XMLHttpRequest();
+        } else {
+            xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        return xmlHttp;
+    }
+
+    // function to handle button press from HTML code above
+    // and send a processing string back to server
+    // this processing string is use in the .on method
+    function configBtnPress() {
+        var xhttp = new XMLHttpRequest();
+        var message;
+        // if you want to handle an immediate reply (like status from the ESP)
+        // handling of the button press use this code
+        // since this button status from the ESP is in the main XML code
+        // we don't need this
+        // remember that if you want immediate processing feedback you must send it
+        // in the ESP handling function and here
+        /*
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              message = this.responseText;
+              // update some HTML data
+            }
+          }
+          */
+
+        // NOTE: whatever you name the server.on "/name" is
+        // you need to put the "name" in 2nd arg of open below
+
+        // NOTE: ? is a delimiter
+        // first arg config is use in the .on method
+        // server.on("/config", updateConfig);
+        // then the second arg VALUE is use in the processing function
+        // String t_state = server.arg("VALUE");
+        // then + the configs value property
+        xhttp.open(
+            "PUT",
+            "/config?airTempRate=" +
+            airTempRate +
+            "&soilRate=" +
+            soilRate +
+            "&photocellRate=" +
+            photocellRate,
+            true
+        );
+        xhttp.send();
+    }
+
+    // TODO: finish the following methods
+    function airTempBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        // get immediate feedback & update sensor
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("air-temp-f").innerHTML = this.responseText
+            }
+        }
+
+        xhttp.open("PUT", "/airTempBtn", false);
+        xhttp.send();
+    }
+
+    function soilBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                // moisture + temp response
+                let xml = this.responseXML;
+                let moisture = xml.getElementsByTagName("moisture")[0].textContent;
+                let temp = xml.getElementsByTagName("temp")[0].textContent;
+
+                document.getElementById("soil-moisture").innerHTML = moisture;
+                document.getElementById("soil-temp-f").innerHTML = temp;
+            }
+        }
+
+        xhttp.open("PUT", "/soilBtn", false);
+        xhttp.send();
+    }
+
+    function photocellBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("photocell").innerHTML = this.responseText
+            }
+        }
+
+        xhttp.open("PUT", "/photocellBtn", false);
+        xhttp.send();
+    }
+
+    function wateringBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.open("PUT", "/waterBtn", false);
+        xhttp.send();
+    }
+
+    function growLightBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("grow-light").innerHTML = this.responseText
+            }
+        }
+
+        xhttp.open("PUT", "/growLightBtn", false);
+        xhttp.send();
+    }
+
+    function lightBrightnessBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("brightness-lightt").innerHTML = this.responseText
+            }
+        }
+
+        xhttp.open("PUT", "/brightnessBtn", false);
+        xhttp.send();
+    }
+
+    function lightRedBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("light-color").innerHTML = this.responseText
+            }
+        }
+
+        xhttp.open("PUT", "/redBtn", false);
+        xhttp.send();
+    }
+
+    function lightGreenBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("light-color").innerHTML = this.responseText
+            }
+        }
+
+        xhttp.open("PUT", "/greenBtn", false);
+        xhttp.send();
+    }
+
+    function lightBlueBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("light-color").innerHTML = this.responseText
+            }
+        }
+
+        xhttp.open("PUT", "/blueBtn", false);
+        xhttp.send();
+    }
+
+    function rgbBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("light-color").innerHTML = this.responseText
+            }
+        }
+
+        xhttp.open("PUT", "/rgbBtn", false);
+        xhttp.send();
+    }
+
+    function buzzerBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.open("PUT", "/buzzerBtn", false);
+        xhttp.send();
+    }
+
+    function writeBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.open("PUT", "/writeBtn", false);
+        xhttp.send();
+    }
+
+    function clearBtnPress() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.open("PUT", "/clearBtn", false);
+        xhttp.send();
+    }
+
+    function updateAirTempSlider(value) {
+        airTempRate = value;
+        document.getElementById("air-temp-slider").innerHTML = value;
+    }
+
+    function updateSoilSlider(value) {
+        soilRate = value;
+        document.getElementById("soil-slider").innerHTML = value;
+    }
+
+    function updatePhotocellSlider(value) {
+        photocellRate = value;
+        document.getElementById("photocell-slider").innerHTML = value;
+    }
+
+    // function to handle the response from the ESP
+    // TODO: complete this. 349
+    function response() { }
+
+    // general processing code for the web page to ask for an XML stream
+    // this is actually why you need to keep sending data to the page to
+    // force this call with stuff like this
+    // server.on("/xml", SendXML);
+    // otherwise the page will not request XML from the ESP,
+    // and updates will not happen
+    function process() {
+        if (xmlHttp.readyState == 0 || xmlHttp.readyState == 4) {
+            xmlHttp.open("PUT", "xml", true);
+            xmlHttp.onreadystatechange = response;
+            xmlHttp.send(null);
+        }
+        // you may have to play with this value, big pages need more porcessing time,
+        // and hence, a longer timeout
+        setTimeout("process()", 100);
+    }
+
+</script>
 
 </html>
