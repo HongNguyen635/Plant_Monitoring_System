@@ -16,7 +16,23 @@
 #define IR_SENSOR2 'F'
 #define IR_SENSOR3 'G'
 #define IR_SENSOR4 'H'
-#define HUMIDITY_CHAR 'I'
+#define INTRUSION_DETECTED_CHAR 'I'
+#define AIR_QUALITY_CHAR 'J'
+#define HUMIDITY_CHAR 'K'
+#define SOUND_SENSOR 'L'
+#define SMOKE_SENSOR 'M'
+#define FLAME_SENSOR 'N'
+#define WATER_CMD_CHAR 'O'
+#define TOGGLE_LED_CHAR 'P'
+#define LED_BRIGHTNESS_CHAR 'Q'
+#define LED_RED_CHAR 'R'
+#define LED_GREEN_CHAR 'S'
+#define LED_BLUE_CHAR 'T'
+#define LED_RGB_CHAR 'U'
+#define BUZZER_CMD_CHAR 'V'
+#define WRITE_DISPLAY_CHAR 'W'
+#define CLEAR_DISPLAY_CHAR 'X'
+#define CONFIG_CHAR 'Y'
 
 int counter = 0;
 
@@ -61,6 +77,7 @@ void setup()
 {
   BTSerial.begin(38400);
   Serial.begin(9600);
+  Serial1.begin(9600); // Hardware UART
   lcd.backlight();
   lcd.init(); 
   // Serial.println("works");
@@ -73,6 +90,71 @@ void setup()
 // test communication to uno
 void loop()
 {
+  // ----- ESP32 UART COM -----
+  // receive cmd from esp32
+  if (Serial1.available()) {
+    // read in the char
+    char cmd = Serial1.read();
+
+    switch (cmd) {
+      case CONFIG_CHAR:
+      // TODO:
+      break;
+
+      case TEMP_CHAR:
+      // TODO:
+      break;
+
+      case MOISTURE_CHAR:
+      // TODO: note, esp32 expects moisture 1st, then temp
+      break;
+
+      case PHOTOCELL_CHAR:
+      // TODO:
+      break;
+
+      case WATER_CMD_CHAR:
+      // TODO:
+      break;
+
+      case TOGGLE_LED_CHAR:
+      // TODO:
+      break;
+
+      case LED_BRIGHTNESS_CHAR:
+      // TODO:
+      break;
+
+      case LED_RED_CHAR:
+      // TODO:
+      break;
+
+      case LED_BLUE_CHAR:
+      // TODO:
+      break;
+
+      case LED_GREEN_CHAR:
+      // TODO:
+      break;
+
+      case LED_RGB_CHAR:
+      // TODO:
+      break;
+
+      case BUZZER_CMD_CHAR:
+      // TODO:
+      break;
+
+      case WRITE_DISPLAY_CHAR:
+      // TODO:
+      break;
+
+      case CLEAR_DISPLAY_CHAR
+      // TODO:
+      break;
+    }
+  }
+
   // BTSerial.write('1');
 
   // test display
@@ -220,6 +302,13 @@ void requestPhotocell(void) {
   uint8_t lo = BTSerial.read();
   uint16_t BT = (hi << 8) | lo;
   photocellReading = BT;
+
+  // convert to human-readable
+  String newPhotocell = convertPhototocellSensor();
+
+  // send to UART
+  Serial1.print(PHOTOCELL_CHAR);
+  Serial1.println(newPhotocell);
 }
 
 void requestIR1() {
@@ -255,6 +344,13 @@ void requestTemp(void) {
   while (!BTSerial.available()) {}
   int BT = BTSerial.read();
   tempReading = BT;
+
+  // convert to human-readable
+  uint8_t newTemp = convertTemperatureSensor();
+
+  // send to UART
+  Serial1.print(TEMP_CHAR);
+  Serial1.println(newTemp);
 }
 
 void requestTempSoil(void) {
@@ -279,3 +375,46 @@ void requestHumidity(void) {
   int BT = BTSerial.read();
   humidityReading = BT;
 }
+
+// --------------------------------------
+// SENSOR CONVERSION METHODS
+// --------------------------------------
+// convert photocell reaidng
+String convertPhototocellSensor() {
+  // We'll have a few threshholds, qualitatively determined
+  if (photocellReading < 100) {
+    return "Dark";
+
+  } else if (photocellReading < 300) {
+    return "Dim";
+
+  } else if (photocellReading < 500) {
+    return "Light";
+
+  } else if (photocellReading < 900) {
+    return "Bright";
+
+  } else {
+    return "Very bright!";
+  }
+}
+
+// convert temperature reading
+uint8_t convertTemperatureSensor() { 
+  // converting that reading to voltage
+  float voltage = tempReading * 5.0;
+  voltage /= 1024.0; 
+  
+  // now print out the temperature
+  float temperatureC = (voltage - 0.5) * 100 ;  //converting from 10 mv per degree wit 500 mV offset
+                                                //to degrees ((voltage - 500mV) times 100)
+  
+  // convert to Fahrenheit
+  float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
+
+  // change to int
+  uint8_t returnTemp = (uint8_t) temperatureF
+
+  return returnTemp;
+}
+

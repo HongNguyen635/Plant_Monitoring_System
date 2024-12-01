@@ -29,13 +29,13 @@ function configBtnPress() {
   // remember that if you want immediate processing feedback you must send it
   // in the ESP handling function and here
   /*
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        message = this.responseText;
-        // update some HTML data
-      }
-    }
-    */
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+              message = this.responseText;
+              // update some HTML data
+            }
+          }
+          */
 
   // NOTE: whatever you name the server.on "/name" is
   // you need to put the "name" in 2nd arg of open below
@@ -63,6 +63,13 @@ function configBtnPress() {
 function airTempBtnPress() {
   var xhttp = new XMLHttpRequest();
 
+  // get immediate feedback & update sensor
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("air-temp-f").innerHTML = this.responseText;
+    }
+  };
+
   xhttp.open("PUT", "/airTempBtn", false);
   xhttp.send();
 }
@@ -70,12 +77,30 @@ function airTempBtnPress() {
 function soilBtnPress() {
   var xhttp = new XMLHttpRequest();
 
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      // moisture + temp response
+      let xml = this.responseXML;
+      let moisture = xml.getElementsByTagName("moisture")[0].textContent;
+      let temp = xml.getElementsByTagName("temp")[0].textContent;
+
+      document.getElementById("soil-moisture").innerHTML = moisture;
+      document.getElementById("soil-temp-f").innerHTML = temp;
+    }
+  };
+
   xhttp.open("PUT", "/soilBtn", false);
   xhttp.send();
 }
 
 function photocellBtnPress() {
   var xhttp = new XMLHttpRequest();
+
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("photocell").innerHTML = this.responseText;
+    }
+  };
 
   xhttp.open("PUT", "/photocellBtn", false);
   xhttp.send();
@@ -91,12 +116,25 @@ function wateringBtnPress() {
 function growLightBtnPress() {
   var xhttp = new XMLHttpRequest();
 
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("grow-light").innerHTML = this.responseText;
+    }
+  };
+
   xhttp.open("PUT", "/growLightBtn", false);
   xhttp.send();
 }
 
 function lightBrightnessBtnPress() {
   var xhttp = new XMLHttpRequest();
+
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("brightness-lightt").innerHTML =
+        this.responseText;
+    }
+  };
 
   xhttp.open("PUT", "/brightnessBtn", false);
   xhttp.send();
@@ -105,12 +143,24 @@ function lightBrightnessBtnPress() {
 function lightRedBtnPress() {
   var xhttp = new XMLHttpRequest();
 
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("light-color").innerHTML = this.responseText;
+    }
+  };
+
   xhttp.open("PUT", "/redBtn", false);
   xhttp.send();
 }
 
 function lightGreenBtnPress() {
   var xhttp = new XMLHttpRequest();
+
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("light-color").innerHTML = this.responseText;
+    }
+  };
 
   xhttp.open("PUT", "/greenBtn", false);
   xhttp.send();
@@ -119,12 +169,24 @@ function lightGreenBtnPress() {
 function lightBlueBtnPress() {
   var xhttp = new XMLHttpRequest();
 
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("light-color").innerHTML = this.responseText;
+    }
+  };
+
   xhttp.open("PUT", "/blueBtn", false);
   xhttp.send();
 }
 
 function rgbBtnPress() {
   var xhttp = new XMLHttpRequest();
+
+  xhttp.onreadystatechange = function () {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("light-color").innerHTML = this.responseText;
+    }
+  };
 
   xhttp.open("PUT", "/rgbBtn", false);
   xhttp.send();
@@ -153,16 +215,17 @@ function clearBtnPress() {
 
 function updateAirTempSlider(value) {
   airTempRate = value;
-  document.getElementById("air-temp-slider").innerHTML = this.value;
-  console.log("This");
+  document.getElementById("air-temp-slider").innerHTML = value;
 }
 
 function updateSoilSlider(value) {
   soilRate = value;
+  document.getElementById("soil-slider").innerHTML = value;
 }
 
 function updatePhotocellSlider(value) {
   photocellRate = value;
+  document.getElementById("photocell-slider").innerHTML = value;
 }
 
 // function to handle the response from the ESP

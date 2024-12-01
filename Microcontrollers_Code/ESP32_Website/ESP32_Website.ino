@@ -4,6 +4,7 @@
 #include <WiFi.h>      
 #include <WebServer.h> 
 #include "Dashboard.h" // stores the html page code
+#include "HardwareSerial.h"
 
 // post web pages to home intranet for easy debugging
 // just need to refresh the browser as apposed to reconnection
@@ -20,16 +21,50 @@
 #define AP_PASS "1234567890"
 
 // TODO: define the arduino pins for communication
-#define ESP32LED 2
-bool currentState = false;
+#define RX2 16
+#define TX2 17
+
+HardwareSerial espSerial(2); // use UART2
+
+// UART com char
+#define PHOTOCELL_CHAR 'A'
+#define TEMP_CHAR 'B'
+#define MOISTURE_CHAR 'C'
+#define TEMP_SOIL_CHAR 'D'
+#define INTRUSION_DETECTED_CHAR 'I'
+#define AIR_QUALITY_CHAR 'J'
+#define HUMIDITY_CHAR 'K'
+#define SOUND_SENSOR 'L'
+#define SMOKE_SENSOR 'M'
+#define FLAME_SENSOR 'N'
+#define WATER_CMD_CHAR 'O'
+#define TOGGLE_LED_CHAR 'P'
+#define LED_BRIGHTNESS_CHAR 'Q'
+#define LED_RED_CHAR 'R'
+#define LED_GREEN_CHAR 'S'
+#define LED_BLUE_CHAR 'T'
+#define LED_RGB_CHAR 'U'
+#define BUZZER_CMD_CHAR 'V'
+#define WRITE_DISPLAY_CHAR 'W'
+#define CLEAR_DISPLAY_CHAR 'X'
+#define CONFIG_CHAR 'Y'
 
 // stores raw sensors and components data
-uint16_t photocellSensor = 0;
-uint16_t airTemperatureSensor = 0;
-bool irSensor1 = false; // false = no object
-bool irSensor2 = false; // false = no object
+bool isIntrusionDetected = false;
+bool isSmokeDetected = false;
+bool isFlameDetected = false;
+uint8_t airTempSensor = 0;
+uint8_t moistureSensor = 0;
+uint8_t soilTempSensor = 0;
+uint8_t airQualitySensor = 0;
+uint8_t humiditySensor = 0;
+uint8_t countSoundSensor = 0;
+String photocellSensor = "Dark";
+String ledColor = "RGB";
 
 // TODO: add moisture sensor and soil temp
+bool isLightOn = false; // LED grow light
+bool isLightDim = false; // LED brightness
 
 // XML size
 char XML[2048]; // TODO: fix this to the actual website char size
@@ -50,11 +85,8 @@ IPAddress ip;
 WebServer server(80);
 
 void setup() {
-  // setup the serial monitor
-  Serial.begin(9600);
-
-  pinMode(ESP32LED, OUTPUT);
-  digitalWrite(ESP32LED, LOW);
+  Serial.begin(9600); // serial monitor
+  espSerial.begin(9600, SERIAL_8N1, RX2, TX2); // UART
 
 
   // when web page are large, might not get a call back from the webpage
@@ -104,10 +136,6 @@ void setup() {
   server.on("/xml", SendXML);
 
   // TODO: add server.on statement for each button on the website
-
-  // test button to turn on ESP32 LED
-  server.on("/esp32_led_button", updateESP32LED);
-
   server.on("/config", updateConfig);
   server.on("/airTempBtn", updateAirTemp);
   server.on("/soilBtn", updateSoil);
@@ -130,7 +158,66 @@ void setup() {
 }
 
 void loop() {
-  // TODO: add logic to get sensor from mega.
+  // read 1 at a time, update, repeat
+  
+  // if there is data available via UART
+  if (espSerial.available()) {
+    // read in the character & process
+    char cmd = espSerial.read();
+
+    switch (cmd) {
+      case PHOTOCELL_CHAR:
+      photocellSensor = espSerial.readStringUntil('\n');
+      photocellSensor.trim();
+      break;
+
+      case TEMP_CHAR:
+      airTempSensor = espSerial.read();
+      break;
+
+      case MOISTURE_CHAR:
+      moistureSensor = espSerial.read();
+      soilTempSensor = espSerial.read();
+      break;
+
+      case INTRUSION_DETECTED_CHAR:
+      isIntrusionDetected = espSerial.read();
+      break;
+
+      case AIR_QUALITY_CHAR:
+      airQualitySensor = espSerial.read();
+      break;
+
+      case HUMIDITY_CHAR:
+      humiditySensor = espSerial.read();
+      break;
+
+      case SOUND_SENSOR:
+      ++countSoundSensor;
+      break;
+
+      case SMOKE_SENSOR:
+      isSmokeDetected = espSerial.read();
+      break;
+
+      case FLAME_SENSOR:
+      isFlameDetected = espSerial.read();
+      break;
+
+      case TOGGLE_LED_CHAR:
+      isLightOn = espSerial.read();
+      break;
+
+      case LED_BRIGHTNESS_CHAR:
+      isLightDim = espSerial.read();
+      break;
+
+      case LED_RGB_CHAR:
+      ledColor = espSerial.readStringUntil('\n');
+      ledColor.trim();
+      break;
+    }
+  }
 
   // call this repeatedly or the web page won't get instructions
   // to do things
@@ -140,76 +227,147 @@ void loop() {
 
 // ------- HTTP Request Handler -------
 
-void updateESP32LED() {
-  currentState = !currentState;
-
-  digitalWrite(ESP32LED, currentState);
-  Serial.println(currentState);
-
-  // option 1: send no information back, but at least keep the page live
-  // just send nothing back
-  server.send(200, "text/plain", ""); //Send web page
-
-  // option 2: send something back immediately, maybe a pass/fail indication, maybe a measured value
-  // here is how you send data back immediately and NOT through the general XML page update code
-  // my simple example guesses at fan speed--ideally measure it and send back real data
-  // i avoid strings at all caost, hence all the code to start with "" in the buffer and build a
-  // simple piece of data
-  // FanRPM = map(FanSpeed, 0, 255, 0, 2400);
-  // strcpy(buf, "");
-  // sprintf(buf, "%d", FanRPM);
-  // sprintf(buf, buf);
-
-  // // now send it back
-  // server.send(200, "text/plain", buf); //Send web page
-}
-
 // TODO: complete the following methods
 void updateConfig() {
+  // get all the configs
+  String tempRate = server.arg("airTempRate");
+  String soilRate = server.arg("soldRate");
+  String photocellRate = server.arg("photocellRate");
 
+  // send to central
+  espSerial.println(CONFIG_CHAR);
+  espSerial.println(tempRate);
+  espSerial.println(soilRate);
+  espSerial.println(photocellRate);
+
+  // send no information back, but at least keep the page live
+  // just send nothing back
+  server.send(200, "text/plain", "");
 }
 
 void updateAirTemp() {
+  // ask and wait for data
+  espSerial.print(TEMP_CHAR);
 
+  // discard any send in progress byte
+  // and priortize this
+  while(!espSerial.available() && espSerial.read() != TEMP_CHAR) {}
+  airTempSensor = espSerial.read();
+  
+  strcpy(buf, "");
+  sprintf(buf, "%d", temp);
+  server.send(200, "text/plain", buf);
 }
 
 void updateSoil() {
+  espSerial.print(MOISTURE_CHAR);
 
+  // discard any send in progress byte
+  // and priortize this
+  while(!espSerial.available() && espSerial.read() != MOISTURE_CHAR) {}
+  moistureSensor = espSerial.read();
+  soilTempSensor = espSerial.read();
+
+  // Prepare XML response
+  String xmlResponse = "<data>";
+  xmlResponse += "<moisture>" + String(moisture) + "</moisture>";
+  xmlResponse += "<temp>" + String(soilTemp) + "</temp>";
+  xmlResponse += "</data>";
+  
+  server.send(200, "text/xml", xmlResponse);
 }
 
 void updatePhotocell() {
+  espSerial.print(PHOTOCELL_CHAR);
 
+  // discard any send in progress byte
+  // and priortize this
+  while(!espSerial.available() && espSerial.read() != PHOTOCELL_CHAR) {}
+  photocellSensor = espSerial.readStringUntil('\n');
+  photocellSensor.trim(); // trim white space
+  
+  strcpy(buf, "");
+  sprintf(buf, "%s", status);
+  server.send(200, "text/plain", buf);
 }
 
 void waterPlant() {
-
+  espSerial.print(WATER_CMD_CHAR);
+  server.send(200, "text/plain", "");
 }
 
 void growLightBtn() {
-  
+  // toggle LED
+  isLightOn = !isLightOn;
+  espSerial.print(TOGGLE_LED_CHAR);
+  espSerial.print(isLightOn);
+
+  // send status to server
+  strcpy(buf, ""); // clear buffer
+
+  if (isLightOn) {
+    sprintf(buf, "%s", "On");
+  } else {
+    sprintf(buf, "%s", "Off");
+  }
+  server.send(200, "text/plain", buf);
 }
 
 void brightnessBtn() {
+  // toggle dim/bright
+  isLightDim = !isLightDim
+  espSerial.print(LED_BRIGHTNESS_CHAR);
+  espSerial.print(isLightDim);
+  
+  // send status to server
+  strcpy(buf, ""); // clear buffer
 
+  if (isLightDim) {
+    sprintf(buf, "%s", "Dim");
+  } else {
+    sprintf(buf, "%s", "Bright");
+  }
+  server.send(200, "text/plain", buf);
 }
 
 void redBtn() {
-
+  ledColor = "Red";
+  espSerial.print(LED_RED_CHAR);
+  server.send(200, "text/plain", buf);
 }
 
 void greenBtn() {
-
+  ledColor = "Green";
+  espSerial.print(LED_GREEN_CHAR);
+  server.send(200, "text/plain", buf);
 }
 
-void blueBtn() {}
+void blueBtn() {
+  ledColor = "Blue";
+  espSerial.print(LED_BLUE_CHAR);
+  server.send(200, "text/plain", buf);
+}
 
-void rgbBtn() {}
+void rgbBtn() {
+  ledColor = "RGB";
+  espSerial.print(LED_RGB_CHAR);
+  server.send(200, "text/plain", buf);
+}
 
-void buzzerBtn() {}
+void buzzerBtn() {
+  espSerial.print(BUZZER_CMD_CHAR);
+  server.send(200, "text/plain", buf);
+}
 
-void writeBtn() {}
+void writeBtn() {
+  espSerial.print(WRITE_DISPLAY_CHAR);
+  server.send(200, "text/plain", buf);
+}
 
-void clearBtn() {}
+void clearBtn() {
+  espSerial.print(CLEAR_DISPLAY_CHAR);
+  server.send(200, "text/plain", buf);
+}
 
 
 // code to send the main web page
@@ -231,20 +389,63 @@ void SendXML() {
 
   strcpy(XML, "<?xml version = '1.0'?>\n<Data>\n");
 
-  // show led0 status
-  if (currentState) {
-    strcat(XML, "<LED>1</LED>\n");
-  }
-  else {
-    strcat(XML, "<LED>0</LED>\n");
-  }
+  // send air temp
+  sprintf(buf, "<AT>%d</AT>\n", airTempSensor);
+  strcat(XML, buf);
+
+  // send moisture
+  sprintf(buf, "<M>%d</M>\n", moistureSensor);
+  strcat(XML, buf);
+
+  // send soil temp
+  sprintf(buf, "<ST>%d</ST>\n", soilTempSensor);
+  strcat(XML, buf);
+
+  // send photocell
+  sprintf(buf, "<P>%s</P>\n", photocellSensor);
+  strcat(XML, buf);
+
+  // send IR
+  sprintf(buf, "<IR>%d</IR>\n", isIntrusionDetected ? 1 : 0);
+  strcat(XML, buf);
+
+  // send air quality
+  sprintf(buf, "<AQ>%d</AQ>\n", airQualitySensor);
+  strcat(XML, buf);
+
+  // send humidity
+  sprintf(buf, "<H>%d</H>\n", humiditySensor);
+  strcat(XML, buf);
+
+  // send sound
+  sprintf(buf, "<S>%d</S>\n", countSoundSensor);
+  strcat(XML, buf);
+
+  // send smoke
+  sprintf(buf, "<SK>%d</SK>\n", isSmokeDetected ? 1 : 0);
+  strcat(XML, buf);
+
+  // send flame
+  sprintf(buf, "<F>%d</F>\n", isFlameDetected ? 1 : 0);
+  strcat(XML, buf);
+
+  // send led status
+  sprintf(buf, "<LED>%d</LED>\n", isLightOn ? 1 : 0);
+  strcat(XML, buf);
+
+  // send led brightness
+  sprintf(buf, "<BRI>%d</BRI>\n", isLightDim ? 1 : 0);
+  strcat(XML, buf);
+
+  // send led color
+  sprintf(buf, "<CO>%d</CO>\n", ledColor);
+  strcat(XML, buf);
 
   strcat(XML, "</Data>\n");
-
   // wanna see what the XML code looks like?
   // actually print it to the serial monitor and use some text editor to get the size
   // then pad and adjust char XML[2048]; above
-  //Serial.println(XML);
+  // Serial.println(XML);
 
   // you may have to play with this value, big pages need more porcessing time, and hence
   // a longer timeout that 200 ms

@@ -191,53 +191,6 @@ void loop()
 }
 
 
-// --------------------------------------
-// SENSOR READING METHODS
-// --------------------------------------
-
-// get the photocell reading
-String getPhototocellSensor() {
-  // get the raw photocell reading
-  int photocellReading = analogRead(photocellPin);  
-  Serial.println(photocellReading);
- 
-  // We'll have a few threshholds, qualitatively determined
-  if (photocellReading < 100) {
-    return "Dark";
-
-  } else if (photocellReading < 300) {
-    return "Dim";
-
-  } else if (photocellReading < 500) {
-    return "Light";
-
-  } else if (photocellReading < 900) {
-    return "Bright";
-
-  } else {
-    return "Very bright!";
-  }
-}
-
-// get temperature reading
-float getTemperatureSensor() {
-  int reading = analogRead(temperaturePin);  
- 
-  // converting that reading to voltage
-  float voltage = reading * 5.0;
-  voltage /= 1024.0; 
-  
-  // now print out the temperature
-  float temperatureC = (voltage - 0.5) * 100 ;  //converting from 10 mv per degree wit 500 mV offset
-                                                //to degrees ((voltage - 500mV) times 100)
-  
-  // convert to Fahrenheit
-  float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
-
-  return temperatureF;
-}
-
-
 // IR sensors ISR
 void irSensor1_ISR() {
   //detachInterrupt(digitalPinToInterrupt(irSensor1_ISR)); 
@@ -248,9 +201,3 @@ void irSensor2_ISR() {
   // detachInterrupt(digitalPinToInterrupt(irSensor2_ISR)); 
   objectPresentSensor2 = true;
 }
-
-
-// --------------------------------------
-// UTILITY METHODS
-// --------------------------------------
-

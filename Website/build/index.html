@@ -9,7 +9,7 @@
     <script type="module" src="js/main.js"></script>
 </head>
 
-<body class="bg-emerald-50">
+<body class="bg-emerald-50" onload="process()">
     <header class="bg-green-900 text-white top-0 sticky">
         <section class="max-w-4xl flex mx-auto p-3 px-6 justify-center items-center">
             <h1 class="text-3xl font-roboto font-medium">
@@ -579,11 +579,7 @@
     function lightRedBtnPress() {
         var xhttp = new XMLHttpRequest();
 
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("light-color").innerHTML = this.responseText
-            }
-        }
+        document.getElementById("light-color").innerHTML = "Red";
 
         xhttp.open("PUT", "/redBtn", false);
         xhttp.send();
@@ -592,11 +588,7 @@
     function lightGreenBtnPress() {
         var xhttp = new XMLHttpRequest();
 
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("light-color").innerHTML = this.responseText
-            }
-        }
+        document.getElementById("light-color").innerHTML = "Green";
 
         xhttp.open("PUT", "/greenBtn", false);
         xhttp.send();
@@ -605,11 +597,7 @@
     function lightBlueBtnPress() {
         var xhttp = new XMLHttpRequest();
 
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("light-color").innerHTML = this.responseText
-            }
-        }
+        document.getElementById("light-color").innerHTML = "Blue";
 
         xhttp.open("PUT", "/blueBtn", false);
         xhttp.send();
@@ -618,11 +606,7 @@
     function rgbBtnPress() {
         var xhttp = new XMLHttpRequest();
 
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("light-color").innerHTML = this.responseText
-            }
-        }
+        document.getElementById("light-color").innerHTML = "RGB";
 
         xhttp.open("PUT", "/rgbBtn", false);
         xhttp.send();
@@ -666,7 +650,107 @@
 
     // function to handle the response from the ESP
     // TODO: complete this. 349
-    function response() { }
+    function response() {
+        var message;
+        var xmlResponse;
+        var xmldoc;
+
+        // get the xml stream
+        xmlResponse = xmlHttp.responseXML;
+
+
+        // Air temp
+        xmldoc = xmlResponse.getElementsByTagName("AT");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        // update on website
+        document.getElementById("air-temp-f").innerHTML = message;
+
+        // moisture
+        xmldoc = xmlResponse.getElementsByTagName("M");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("soil-moisture").innerHTML = message;
+
+        // soil temp
+        xmldoc = xmlResponse.getElementsByTagName("ST");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("soil-temp-f").innerHTML = message;
+
+        // photocell
+        xmldoc = xmlResponse.getElementsByTagName("P");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("photocell").innerHTML = message;
+
+        // ir
+        xmldoc = xmlResponse.getElementsByTagName("IR");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        if (message == 0) {
+            document.getElementById("ir-sensor").innerHTML = "Clear";
+        } else {
+            document.getElementById("ir-sensor").innerHTML = "Object Detected!";
+        }
+
+        // air quality
+        xmldoc = xmlResponse.getElementsByTagName("AQ");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("air-quality-sensor").innerHTML = message;
+
+        // humidity
+        xmldoc = xmlResponse.getElementsByTagName("H");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("humidity-sensor").innerHTML = message;
+
+        // sound
+        xmldoc = xmlResponse.getElementsByTagName("S");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("sound-sensor").innerHTML = message;
+
+        // smoke
+        xmldoc = xmlResponse.getElementsByTagName("SK");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        if (message == 0) {
+            document.getElementById("smoke-sensor").innerHTML = "Clear";
+        } else {
+            document.getElementById("smoke-sensor").innerHTML = "Smoke Detected!";
+        }
+
+        // flame
+        xmldoc = xmlResponse.getElementsByTagName("F");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        if (message == 0) {
+            document.getElementById("flame-sensor").innerHTML = "Clear";
+        } else {
+            document.getElementById("flame-sensor").innerHTML = "Flame Detected!";
+        }
+
+        // led status
+        xmldoc = xmlResponse.getElementsByTagName("LED");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        if (message == 0) {
+            document.getElementById("grow-light").innerHTML = "On";
+        } else {
+            document.getElementById("grow-light").innerHTML = "Off";
+        }
+
+        // led brightness
+        xmldoc = xmlResponse.getElementsByTagName("BRI");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        if (message == 0) {
+            document.getElementById("brightness-light").innerHTML = "Dim";
+        } else {
+            document.getElementById("brightness-light").innerHTML = "Bright";
+        }
+
+        // led color
+        xmldoc = xmlResponse.getElementsByTagName("CO");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("light-color").innerHTML = message;
+    }
 
     // general processing code for the web page to ask for an XML stream
     // this is actually why you need to keep sending data to the page to
