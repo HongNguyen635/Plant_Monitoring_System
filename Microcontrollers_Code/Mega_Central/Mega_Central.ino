@@ -21,6 +21,8 @@ int photocellReading = 0;
 int tempReading = 0;
 int moistureReading = 0;
 int tempSoilReading = 0;
+int IR1Reading = 0;
+int IR2Reading = 0;
 
 int photocellPeriod = 1;
 int tempPeriod = 2;
@@ -139,32 +141,32 @@ void sensorCheck(void) {
 
 void requestPhotocell(void) {
   BTSerial.write(PHOTOCELL_CHAR);
-  // while (!BTSerial.available()) {}
+  while (!BTSerial.available()) {}
   uint8_t hi = BTSerial.read();
-  // BTSerial.write('0');
-  // while (!BTSerial.available()) {}
+  BTSerial.write('0');
+  while (!BTSerial.available()) {}
   uint8_t lo = BTSerial.read();
-  uint16_t BT = (hi << 8) + lo;
-  photocellReading = BT;
+  uint16_t photocellData = (hi << 8) + lo;
+  photocellReading = photocellData;
 }
 
 bool requestIR1() {
   BTSerial.write(IR_SENSOR1);
-  while (!BTSerial.available()) {}
+  // while (!BTSerial.available()) {}
   char BT = BTSerial.read();
   return !(BT == 'H');
 }
 
 bool requestIR2() {
   BTSerial.write(IR_SENSOR2);
-  while (!BTSerial.available()) {}
+  // while (!BTSerial.available()) {}
   char BT = BTSerial.read();
   return !(BT == 'H');
 }
 
 void requestTemp(void) {
   BTSerial.write(TEMP_CHAR);
-  // while (!BTSerial.available()) {}
+  while (!BTSerial.available()) {}
   int BT = BTSerial.read();
   tempReading = BT;
 }
