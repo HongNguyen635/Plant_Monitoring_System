@@ -81,13 +81,6 @@ function photocellBtnPress() {
   xhttp.send();
 }
 
-function irBtnPress() {
-  var xhttp = new XMLHttpRequest();
-
-  xhttp.open("PUT", "/irBtn", false);
-  xhttp.send();
-}
-
 function wateringBtnPress() {
   var xhttp = new XMLHttpRequest();
 
@@ -102,8 +95,66 @@ function growLightBtnPress() {
   xhttp.send();
 }
 
+function lightBrightnessBtnPress() {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.open("PUT", "/brightnessBtn", false);
+  xhttp.send();
+}
+
+function lightRedBtnPress() {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.open("PUT", "/redBtn", false);
+  xhttp.send();
+}
+
+function lightGreenBtnPress() {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.open("PUT", "/greenBtn", false);
+  xhttp.send();
+}
+
+function lightBlueBtnPress() {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.open("PUT", "/blueBtn", false);
+  xhttp.send();
+}
+
+function rgbBtnPress() {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.open("PUT", "/rgbBtn", false);
+  xhttp.send();
+}
+
+function buzzerBtnPress() {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.open("PUT", "/buzzerBtn", false);
+  xhttp.send();
+}
+
+function writeBtnPress() {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.open("PUT", "/writeBtn", false);
+  xhttp.send();
+}
+
+function clearBtnPress() {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.open("PUT", "/clearBtn", false);
+  xhttp.send();
+}
+
 function updateAirTempSlider(value) {
   airTempRate = value;
+  document.getElementById("air-temp-slider").innerHTML = this.value;
+  console.log("This");
 }
 
 function updateSoilSlider(value) {

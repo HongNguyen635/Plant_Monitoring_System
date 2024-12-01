@@ -112,9 +112,16 @@ void setup() {
   server.on("/airTempBtn", updateAirTemp);
   server.on("/soilBtn", updateSoil);
   server.on("/photocellBtn", updatePhotocell);
-  server.on("/irBtn", updateIR);
   server.on("/waterBtn", waterPlant);
   server.on("/growLightBtn", growLightBtn);
+  server.on("/brightnessBtn", brightnessBtn);
+  server.on("/redBtn", redBtn);
+  server.on("/greenBtn", greenBtn);
+  server.on("/blueBtn", blueBtn);
+  server.on("/rgbBtn", rgbBtn);
+  server.on("/buzzerBtn", buzzerBtn);
+  server.on("/writeBtn", writeBtn);
+  server.on("/clearBtn", clearBtn);
   
 
   // finally begin the server
@@ -174,10 +181,6 @@ void updatePhotocell() {
 
 }
 
-void updateIR() {
-
-}
-
 void waterPlant() {
 
 }
@@ -185,6 +188,28 @@ void waterPlant() {
 void growLightBtn() {
   
 }
+
+void brightnessBtn() {
+
+}
+
+void redBtn() {
+
+}
+
+void greenBtn() {
+
+}
+
+void blueBtn() {}
+
+void rgbBtn() {}
+
+void buzzerBtn() {}
+
+void writeBtn() {}
+
+void clearBtn() {}
 
 
 // code to send the main web page
