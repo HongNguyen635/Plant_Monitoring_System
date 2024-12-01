@@ -1,13 +1,17 @@
 //this is slave
-#include "Adafruit_seesaw.h"
+#include <Adafruit_seesaw.h>
 #include <SoftwareSerial.h>
+#include <DHT.h>
 
 // sensors pins
 #define photocellPin A0
 #define temperaturePin A1
 #define irSensor1 2
 #define irSensor2 3
+#define irSensor3 4
+#define irSensor4 6
 #define buzzerPin 5
+#define humidityPin 18
 
 // bluetooth communication char
 #define PHOTOCELL_CHAR 'A'
@@ -16,11 +20,17 @@
 #define TEMP_SOIL_CHAR 'D'
 #define IR_SENSOR1 'E'
 #define IR_SENSOR2 'F'
+#define IR_SENSOR3 'G'
+#define IR_SENSOR4 'H'
+#define HUMIDITY_CHAR 'I'
+
+#define DHTTYPE DHT11
 
 volatile bool objectPresentSensor1 = false;
 bool objectPresentSensor2 = false;
 
-
+DHT dht(humidityPin, DHTTYPE);
+Adafruit_seesaw ss;
 SoftwareSerial BTSerial(10, 11); // RX, TX
 
 // setup serial monitor and bluetooth
@@ -39,7 +49,10 @@ void setup()
   pinMode(photocellPin, INPUT);
   pinMode(temperaturePin, INPUT);
 
-  // ss.begin(0x36);
+  pinMode(humidityPin, INPUT);
+
+  ss.begin(0x36);
+  dht.begin();
   // OUTPUT
   pinMode(buzzerPin, OUTPUT);
 
@@ -112,7 +125,7 @@ void loop()
       // send first byte
       BTSerial.write(hi);
       // wait for ack
-      while (!BTSerial.available()) {}
+      // while (!BTSerial.available()) {}
       // send second byte
       BTSerial.write(lo);
     } else if (BT == TEMP_CHAR) {
@@ -120,12 +133,21 @@ void loop()
       uint8_t tempReading = analogRead(temperaturePin);
       BTSerial.write(tempReading);
     } else if (BT == MOISTURE_CHAR) {
-      // data send protocol for the moisture sensor
-      BTSerial.write(MOISTURE_CHAR);
+      // data send protocol for the photocell resistor
+      uint16_t moisture = ss.touchRead(0);
+      uint8_t hi = moisture >> 8;
+      uint8_t lo = moisture & 0xFF;
+      // send first byte
+      BTSerial.write(hi);
+      // wait for ack
+      // while (!BTSerial.available()) {}
+      // send second byte
+      BTSerial.write(lo);
     } else if (BT == TEMP_SOIL_CHAR) {
       // data send protocol for the temperature sensor
       // attached to the moisture sensor
-      BTSerial.write(TEMP_SOIL_CHAR);
+      uint8_t tempSoilReading = ss.getTemp();
+      BTSerial.write(tempSoilReading);
     } else if (BT == IR_SENSOR1) {
       // data send protocol for the first IR sensor
       // sends H or L for high or low
@@ -142,6 +164,25 @@ void loop()
       } else {
         BTSerial.write('L');
       }
+    } else if (BT == IR_SENSOR3) {
+      // data send protocol for the third IR sensor
+      // sends H or L for high or low
+      if (digitalRead(irSensor3) == HIGH) {
+        BTSerial.write('H');
+      } else {
+        BTSerial.write('L');
+      }
+    } else if (BT == IR_SENSOR4) {
+      // data send protocol for the fourth IR sensor
+      // sends H or L for high or low
+      if (digitalRead(irSensor4) == HIGH) {
+        BTSerial.write('H');
+      } else {
+        BTSerial.write('L');
+      }
+    } else if (BT == HUMIDITY_CHAR) {
+      uint8_t humidityReading = dht.readHumidity();
+      BTSerial.write(humidityReading);
     } else {
       // command char not recognized, do nothing
       // Serial.println("char not recognized");
@@ -204,7 +245,7 @@ void irSensor1_ISR() {
 }
 
 void irSensor2_ISR() {
-  detachInterrupt(digitalPinToInterrupt(irSensor2_ISR)); 
+  // detachInterrupt(digitalPinToInterrupt(irSensor2_ISR)); 
   objectPresentSensor2 = true;
 }
 

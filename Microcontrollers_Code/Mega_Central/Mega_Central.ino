@@ -14,6 +14,9 @@
 #define TEMP_SOIL_CHAR 'D'
 #define IR_SENSOR1 'E'
 #define IR_SENSOR2 'F'
+#define IR_SENSOR3 'G'
+#define IR_SENSOR4 'H'
+#define HUMIDITY_CHAR 'I'
 
 int counter = 0;
 
@@ -21,18 +24,31 @@ int photocellReading = 0;
 int tempReading = 0;
 int moistureReading = 0;
 int tempSoilReading = 0;
-int IR1Reading = 0;
-int IR2Reading = 0;
+bool IR1Reading = 0;
+bool IR2Reading = 0;
+bool IR3Reading = 0;
+bool IR4Reading = 0;
+int humidityReading = 0;
 
 int photocellPeriod = 1;
 int tempPeriod = 2;
 int moisturePeriod = 3;
 int tempSoilPeriod = 4;
+int IR1Period = 1;
+int IR2Period = 1;
+int IR3Period = 1;
+int IR4Period = 1;
+int humidityPeriod = 5;
 
 bool readPhotocell = false;
 bool readTemp = false;
 bool readMoisture = false;
 bool readTempSoil = false;
+bool readIR1 = false;
+bool readIR2 = false;
+bool readIR3 = false;
+bool readIR4 = false;
+bool readHumidity = false;
 
 // setup bluetooth
 SoftwareSerial BTSerial(12, 2); // RX, TX
@@ -116,52 +132,122 @@ void loop()
     Serial.println(tempSoilReading);
     readTempSoil = false;
   }
+  if (readIR1) {
+    requestIR1();
+    if (IR1Reading == true) {
+      Serial.println("IR1: object detected");
+    } else {
+      Serial.println("IR1: no object detected");
+    }
+    readIR1 = false;
+  }
+  if (readIR2) {
+    requestIR2();
+    if (IR2Reading == true) {
+      Serial.println("IR2: object detected");
+    } else {
+      Serial.println("IR2: no object detected");
+    }
+    readIR2 = false;
+  }
+  if (readIR3) {
+    requestIR3();
+    if (IR3Reading == true) {
+      Serial.println("IR3: object detected");
+    } else {
+      Serial.println("IR3: no object detected");
+    }
+    readIR3 = false;
+  }
+  if (readIR4) {
+    requestIR4();
+    if (IR4Reading == true) {
+      Serial.println("IR4: object detected");
+    } else {
+      Serial.println("IR4: no object detected");
+    }
+    readIR4 = false;
+  }
+  if (readHumidity) {
+    requestHumidity();
+    Serial.print(humidityReading);
+    Serial.println("\% humidity level");
+    readHumidity = false;
+  }
 }
 
 void sensorCheck(void) {
   counter++;
-  if ((counter % photocellPeriod == 0)) {
+  if (counter % photocellPeriod == 0) {
     // requestPhotocell();
     readPhotocell = true;
   }
-  if ((counter % tempPeriod == 0)) {
+  if (counter % tempPeriod == 0) {
     // requestTemp();
     readTemp = true;
   }
-  if ((counter % moisturePeriod == 0)) {
+  if (counter % moisturePeriod == 0) {
     // requestMoisture();
     readMoisture = true;
   }
-  if ((counter % tempSoilPeriod == 0)) {
+  if (counter % tempSoilPeriod == 0) {
     // requestTempSoil();
     readTempSoil = true;
   } 
+  if (counter % IR1Period == 0) {
+    readIR1 = true;
+  }
+  if (counter % IR2Period == 0) {
+    readIR2 = true;
+  }
+  if (counter % IR3Period == 0) {
+    readIR3 = true;
+  }
+  if (counter % IR4Period == 0) {
+    readIR4 = true;
+  }
+  if (counter % humidityPeriod == 0) {
+    readHumidity = true;
+  }
   Serial.println();
 }
 
+
 void requestPhotocell(void) {
   BTSerial.write(PHOTOCELL_CHAR);
-  while (!BTSerial.available()) {}
+  while (BTSerial.available() <  2) {}
   uint8_t hi = BTSerial.read();
-  BTSerial.write('0');
-  while (!BTSerial.available()) {}
   uint8_t lo = BTSerial.read();
-  uint16_t photocellData = (hi << 8) + lo;
-  photocellReading = photocellData;
+  uint16_t BT = (hi << 8) | lo;
+  photocellReading = BT;
 }
 
-bool requestIR1() {
+void requestIR1() {
   BTSerial.write(IR_SENSOR1);
-  // while (!BTSerial.available()) {}
+  while (!BTSerial.available()) {}
   char BT = BTSerial.read();
-  return !(BT == 'H');
+  IR1Reading = !(BT == 'H');
 }
 
-bool requestIR2() {
+void requestIR2() {
   BTSerial.write(IR_SENSOR2);
-  // while (!BTSerial.available()) {}
+  while (!BTSerial.available()) {}
   char BT = BTSerial.read();
-  return !(BT == 'H');
+  IR2Reading = !(BT == 'H');
+}
+
+void requestIR3() {
+  BTSerial.write(IR_SENSOR3);
+  while (!BTSerial.available()) {}
+  char BT = BTSerial.read();
+  IR3Reading = !(BT == 'H');
+}
+
+void requestIR4() {
+  BTSerial.write(IR_SENSOR1);
+  while (!BTSerial.available()) {}
+  char BT = BTSerial.read();
+  IR4Reading = !(BT == 'H');
 }
 
 void requestTemp(void) {
@@ -172,9 +258,24 @@ void requestTemp(void) {
 }
 
 void requestTempSoil(void) {
-  tempSoilReading = 0;
+  BTSerial.write(TEMP_SOIL_CHAR);
+  while (!BTSerial.available()) {}
+  int BT = BTSerial.read();
+  tempSoilReading = BT;
 }
 
 void requestMoisture(void) {
-  moistureReading = 0;
+  BTSerial.write(MOISTURE_CHAR);
+  while (BTSerial.available() <  2) {}
+  uint8_t hi = BTSerial.read();
+  uint8_t lo = BTSerial.read();
+  uint16_t BT = (hi << 8) | lo;
+  moistureReading = BT;
+}
+
+void requestHumidity(void) {
+  BTSerial.write(HUMIDITY_CHAR);
+  while (!BTSerial.available()) {}
+  int BT = BTSerial.read();
+  humidityReading = BT;
 }
