@@ -2,6 +2,8 @@
 #include <Adafruit_seesaw.h>
 #include <SoftwareSerial.h>
 #include <DHT.h>
+#include <Wire.h>
+#include <Adafruit_PM25AQI.h>
 
 // sensors pins
 #define photocellPin A0
@@ -10,8 +12,11 @@
 #define irSensor2 3
 #define irSensor3 4
 #define irSensor4 6
+#define irSeosnr5 7
 #define buzzerPin 5
 #define humidityPin 18
+#define smokePin 9
+#define flamePin 8
 
 // bluetooth communication char
 #define PHOTOCELL_CHAR 'A'
@@ -22,9 +27,14 @@
 #define IR_SENSOR2 'F'
 #define IR_SENSOR3 'G'
 #define IR_SENSOR4 'H'
-#define HUMIDITY_CHAR 'I'
+#define IR_SENSOR5 'Z'
+#define AIR_QUALITY_CHAR 'J'
+#define HUMIDITY_CHAR 'K'
+#define SOUND_SENSOR 'L'
+#define SMOKE_SENSOR 'M'
+#define FLAME_SENSOR 'N'
 
-#define DHTTYPE DHT11
+Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
 
 volatile bool objectPresentSensor1 = false;
 bool objectPresentSensor2 = false;
@@ -45,14 +55,17 @@ void setup()
   //pinMode(irSensor1, INPUT); 
   pinMode(irSensor1, INPUT_PULLUP); 
   pinMode(irSensor2, INPUT); 
-
+  pinMode(irSensor3, INPUT);
+  pinMode(irSensor4, INPUT);
+  pinMode(irSensor5, INPUT)
   pinMode(photocellPin, INPUT);
   pinMode(temperaturePin, INPUT);
-
   pinMode(humidityPin, INPUT);
+  pinMode(smokePin, INPUT);
+  pinMode(flamePin, INPUT);
 
   ss.begin(0x36);
-  dht.begin();
+  aqi.begin_I2C();
   // OUTPUT
   pinMode(buzzerPin, OUTPUT);
 
@@ -65,6 +78,12 @@ void setup()
 // test bluetooth to read msg from mega
 void loop() 
 {
+  if (digitalRead(irSensor1) || digitalRead(irSensor2) || digitalRead(irSensor3) || digitalRead(irSensor4) || digitalRead(irSensor5) ||) {
+    tone(buzzerPin, 100);
+  } else {
+    noTone(buzzerPin);
+  }
+  PM25_AQI_Data data;
   // TODO: uncomment later
   // if (BTSerial.available()) {
   //   Serial.println(BTSerial.read() - '0');
@@ -183,6 +202,24 @@ void loop()
     } else if (BT == HUMIDITY_CHAR) {
       uint8_t humidityReading = dht.readHumidity();
       BTSerial.write(humidityReading);
+    } else if (BT == SMOKE_SENSOR) {
+      // data send protocol for the fourth IR sensor
+      // sends H or L for high or low
+      if (digitalRead(smokePin) == HIGH) {
+        BTSerial.write('H');
+      } else {
+        BTSerial.write('L');
+      }
+    } else if (BT == FLAME_SENSOR) {
+      // data send protocol for the fourth IR sensor
+      // sends H or L for high or low
+      if (digitalRead(flamePin) == HIGH) {
+        BTSerial.write('H');
+      } else {
+        BTSerial.write('L');
+      }
+    } else if (BT == AIR_QUALITY_CHAR) {
+      int airQuality = data.particles_50um;
     } else {
       // command char not recognized, do nothing
       // Serial.println("char not recognized");
@@ -192,12 +229,12 @@ void loop()
 
 
 // IR sensors ISR
-void irSensor1_ISR() {
-  //detachInterrupt(digitalPinToInterrupt(irSensor1_ISR)); 
-  objectPresentSensor1 = true;
-}
+// void irSensor1_ISR() {
+//   //detachInterrupt(digitalPinToInterrupt(irSensor1_ISR)); 
+//   objectPresentSensor1 = true;
+// }
 
-void irSensor2_ISR() {
-  // detachInterrupt(digitalPinToInterrupt(irSensor2_ISR)); 
-  objectPresentSensor2 = true;
-}
+// void irSensor2_ISR() {
+//   // detachInterrupt(digitalPinToInterrupt(irSensor2_ISR)); 
+//   objectPresentSensor2 = true;
+// }

@@ -6,6 +6,7 @@
 // components pins
 #define displaySDA 20
 #define displaySCL 21
+#define pumpPin 2
 
 // bluetooth assigned char
 #define PHOTOCELL_CHAR 'A'
@@ -16,6 +17,7 @@
 #define IR_SENSOR2 'F'
 #define IR_SENSOR3 'G'
 #define IR_SENSOR4 'H'
+#define IR_SENSOR5 'Z'
 #define INTRUSION_DETECTED_CHAR 'I'
 #define AIR_QUALITY_CHAR 'J'
 #define HUMIDITY_CHAR 'K'
@@ -36,6 +38,10 @@
 
 int counter = 0;
 
+bool pumpOn = false;
+bool pumpOff = false;
+int pumpStart = 0;
+
 int photocellReading = 0;
 int tempReading = 0;
 int moistureReading = 0;
@@ -44,17 +50,23 @@ bool IR1Reading = 0;
 bool IR2Reading = 0;
 bool IR3Reading = 0;
 bool IR4Reading = 0;
+bool IR5Reading = 0;
 int humidityReading = 0;
+bool smokeReading = 0;
+bool flameReading = 0;
 
-int photocellPeriod = 1;
-int tempPeriod = 2;
-int moisturePeriod = 3;
-int tempSoilPeriod = 4;
+int photocellPeriod = 0;
+int tempPeriod = 0;
+int moisturePeriod = 0;
+int tempSoilPeriod = 0;
 int IR1Period = 1;
 int IR2Period = 1;
 int IR3Period = 1;
 int IR4Period = 1;
-int humidityPeriod = 5;
+int IR5Period = 1;
+int humidityPeriod = 0;
+int smokePeriod = 1;
+int flamePeriod = 1;
 
 bool readPhotocell = false;
 bool readTemp = false;
@@ -64,7 +76,10 @@ bool readIR1 = false;
 bool readIR2 = false;
 bool readIR3 = false;
 bool readIR4 = false;
+bool readIR5 = false;
 bool readHumidity = false;
+bool readSmoke = false;
+bool readFlame = false;
 
 // setup bluetooth
 SoftwareSerial BTSerial(12, 2); // RX, TX
@@ -84,7 +99,7 @@ void setup()
   Timer1.initialize(1000000);
   // Serial.println("works");
   Timer1.attachInterrupt(sensorCheck);
-  Serial.println("works");
+  pinMode(pumpPin, OUTPUT);
 }
 
 // test communication to uno
@@ -149,7 +164,7 @@ void loop()
       // TODO:
       break;
 
-      case CLEAR_DISPLAY_CHAR
+      case CLEAR_DISPLAY_CHAR:
       // TODO:
       break;
     }
@@ -250,46 +265,92 @@ void loop()
     }
     readIR4 = false;
   }
+  if (readIR5) {
+    requestIR5();
+    if (IR5Reading == true) {
+      Serial.println("IR5: object detected");
+    } else {
+      Serial.println("IR5: no object detected");
+    }
+    readIR5 = false;
+  }
   if (readHumidity) {
     requestHumidity();
     Serial.print(humidityReading);
     Serial.println("\% humidity level");
     readHumidity = false;
   }
+  if (readSmoke) {
+    requestSmoke();
+    if (smokeReading == true) {
+      Serial.println("smoke detected");
+    } else {
+      Serial.println("no smoke detected");
+    }
+    readSmoke = false;
+  }
+  if (readFlame) {
+    requestFlame();
+    if (flameReading == true) {
+      Serial.println("flame detected");
+    } else {
+      Serial.println("no flame detected");
+    }
+    readFlame = false;
+  }
+  if (pumpOn) {
+    pumpOff = true;
+    pumpStart = counter;
+    pumpOn = false;
+    digitalWrite(pumpPin, HIGH);
+  }
+  if (pumpOff && counter - pumpStart >= 300) {
+    pumpOff = false;
+    digitalWrite(pumpPin, LOW);
+  }
 }
 
 void sensorCheck(void) {
   counter++;
-  if (counter % photocellPeriod == 0) {
+  if (counter % photocellPeriod == 0 && photocellPeriod > 0) {
     // requestPhotocell();
     readPhotocell = true;
   }
-  if (counter % tempPeriod == 0) {
+  if (counter % tempPeriod == 0 && tempPeriod > 0) {
     // requestTemp();
     readTemp = true;
   }
-  if (counter % moisturePeriod == 0) {
+  if (counter % moisturePeriod == 0 && moisturePeriod > 0) {
     // requestMoisture();
     readMoisture = true;
   }
-  if (counter % tempSoilPeriod == 0) {
+  if (counter % tempSoilPeriod == 0 && tempSoilPeriod > 0) {
     // requestTempSoil();
     readTempSoil = true;
   } 
-  if (counter % IR1Period == 0) {
+  if (counter % IR1Period == 0 && IR1Period > 0) {
     readIR1 = true;
   }
-  if (counter % IR2Period == 0) {
+  if (counter % IR2Period == 0 && IR2Period > 0) {
     readIR2 = true;
   }
-  if (counter % IR3Period == 0) {
+  if (counter % IR3Period == 0 && IR3Period > 0) {
     readIR3 = true;
   }
-  if (counter % IR4Period == 0) {
+  if (counter % IR4Period == 0 && IR4Period > 0) {
     readIR4 = true;
   }
-  if (counter % humidityPeriod == 0) {
+  if (counter % IR5Period == 0 && IR5Period > 0) {
+    readIR5 = true;
+  }
+  if (counter % humidityPeriod == 0 && humidityPeriod > 0) {
     readHumidity = true;
+  }
+  if (counter % smokePeriod == 0 && smokePeriod > 0) {
+    readSmoke = true;
+  }
+  if (counter % flamePeriod == 0 && flamePeriod > 0) {
+    readFlame = true;
   }
   Serial.println();
 }
@@ -333,10 +394,31 @@ void requestIR3() {
 }
 
 void requestIR4() {
-  BTSerial.write(IR_SENSOR1);
+  BTSerial.write(IR_SENSOR4);
   while (!BTSerial.available()) {}
   char BT = BTSerial.read();
   IR4Reading = !(BT == 'H');
+}
+
+void requestIR5() {
+  BTSerial.write(IR_SENSOR5);
+  while (!BTSerial.available()) {}
+  char BT = BTSerial.read();
+  IR5Reading = !(BT == 'H');
+}
+
+void requestSmoke() {
+  BTSerial.write(SMOKE_SENSOR);
+  while (!BTSerial.available()) {}
+  char BT = BTSerial.read();
+  smokeReading = (BT == 'H');
+}
+
+void requestFlame() {
+  BTSerial.write(FLAME_SENSOR);
+  while (!BTSerial.available()) {}
+  char BT = BTSerial.read();
+  flameReading = (BT == 'H');
 }
 
 void requestTemp(void) {
@@ -413,7 +495,7 @@ uint8_t convertTemperatureSensor() {
   float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
 
   // change to int
-  uint8_t returnTemp = (uint8_t) temperatureF
+  uint8_t returnTemp = (uint8_t) temperatureF;
 
   return returnTemp;
 }
