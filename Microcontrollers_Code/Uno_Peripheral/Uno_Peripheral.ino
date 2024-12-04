@@ -80,8 +80,8 @@ void setup()
 // test bluetooth to read msg from mega
 void loop() 
 {
-  if (digitalRead(irSensor1) || digitalRead(irSensor2) || digitalRead(irSensor3) || digitalRead(irSensor4) || digitalRead(irSensor5)) {
-    // tone(buzzerPin, 100);
+  if (!digitalRead(irSensor1) || !digitalRead(irSensor2) || !digitalRead(irSensor3) || !digitalRead(irSensor4) || !digitalRead(irSensor5)) {
+    tone(buzzerPin, 100);
   } else {
     noTone(buzzerPin);
   }
@@ -172,7 +172,7 @@ void loop()
     } else if (BT == IR_SENSOR1) {
       // data send protocol for the first IR sensor
       // sends H or L for high or low
-      if (digitalRead(irSensor1) == HIGH) {
+      if (digitalRead(irSensor1) == LOW) {
         BTSerial.write('H');
       } else {
         BTSerial.write('L');
@@ -180,7 +180,7 @@ void loop()
     } else if (BT == IR_SENSOR2) {
       // data send protocol for the second IR sensor
       // sends H or L for high or low
-      if (digitalRead(irSensor2) == HIGH) {
+      if (digitalRead(irSensor2) == LOW) {
         BTSerial.write('H');
       } else {
         BTSerial.write('L');
@@ -188,7 +188,7 @@ void loop()
     } else if (BT == IR_SENSOR3) {
       // data send protocol for the third IR sensor
       // sends H or L for high or low
-      if (digitalRead(irSensor3) == HIGH) {
+      if (digitalRead(irSensor3) == LOW) {
         BTSerial.write('H');
       } else {
         BTSerial.write('L');
@@ -196,7 +196,15 @@ void loop()
     } else if (BT == IR_SENSOR4) {
       // data send protocol for the fourth IR sensor
       // sends H or L for high or low
-      if (digitalRead(irSensor4) == HIGH) {
+      if (digitalRead(irSensor4) == LOW) {
+        BTSerial.write('H');
+      } else {
+        BTSerial.write('L');
+      }
+    } else if (BT == IR_SENSOR5) {
+      // data send protocol for the fourth IR sensor
+      // sends H or L for high or low
+      if (digitalRead(irSensor5) == LOW) {
         BTSerial.write('H');
       } else {
         BTSerial.write('L');

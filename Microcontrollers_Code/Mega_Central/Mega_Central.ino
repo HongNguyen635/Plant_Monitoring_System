@@ -85,14 +85,15 @@ int photocellPeriod = 0;
 int tempPeriod = 0;
 int moisturePeriod = 0;
 int tempSoilPeriod = 0;
-int IR1Period = 1;
-int IR2Period = 1;
-int IR3Period = 1;
-int IR4Period = 1;
-int IR5Period = 1;
-int humidityPeriod = 1;
-int waterPeriod = 1;
+int IR1Period = 2;
+int IR2Period = 2;
+int IR3Period = 2;
+int IR4Period = 2;
+int IR5Period = 2;
+int humidityPeriod = 4;;
+int waterPeriod = 3;;
 int flamePeriod = 1;
+int smokePeriod = 1;
 
 bool readPhotocell = false;
 bool readTemp = false;
@@ -106,6 +107,7 @@ bool readIR5 = false;
 bool readHumidity = false;
 bool readWater = false;
 bool readFlame = false;
+bool readSmoke = false;
 
 // keep track of the total messages
 uint32_t websiteCommandCount = 0;
@@ -132,11 +134,12 @@ void setup()
   pinMode(ledBlue, OUTPUT);
   pinMode(ledGreen, OUTPUT);
 
+  pinMode(pumpPin, OUTPUT);
+
   // Serial.println("works");
   Timer1.initialize(1000000);
   // Serial.println("works");
   Timer1.attachInterrupt(sensorCheck);
-  pinMode(pumpPin, OUTPUT);
 }
 
 // test communication to uno
@@ -480,15 +483,15 @@ void loop()
     readWater = false;
   }
 
-  // if (readSmoke) {
-  //   requestSmoke();
-  //   if (smokeReading == true) {
-  //     Serial.println("smoke detected");
-  //   } else {
-  //     Serial.println("no smoke detected");
-  //   }
-  //   readSmoke = false;
-  // }
+  if (readSmoke) {
+    requestSmoke();
+    if (smokeReading == true) {
+      Serial.println("smoke detected");
+    } else {
+      Serial.println("no smoke detected");
+    }
+    readSmoke = false;
+  }
 
 
   if (readFlame) {
@@ -608,7 +611,9 @@ void sensorCheck(void) {
   if (flamePeriod > 0 && counter % flamePeriod == 0) {
     readFlame = true;
   }
-  Serial.println();
+  if (smokePeriod > 0 && counter % smokePeriod == 0) {
+  readSmoke = true;
+  }
 }
 
 
