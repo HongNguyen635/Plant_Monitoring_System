@@ -10,13 +10,13 @@
 #define temperaturePin A1
 #define irSensor1 2
 #define irSensor2 3
-#define irSensor3 4
-#define irSensor4 6
-#define irSeosnr5 7
+#define irSensor3 6
+#define irSensor4 7
+#define irSensor5 8
 #define buzzerPin 5
 #define humidityPin 18
-#define smokePin 9
-#define flamePin 8
+#define waterSensor A15
+#define flamePin A2
 
 // bluetooth communication char
 #define PHOTOCELL_CHAR 'A'
@@ -28,11 +28,13 @@
 #define IR_SENSOR3 'G'
 #define IR_SENSOR4 'H'
 #define IR_SENSOR5 'Z'
-#define AIR_QUALITY_CHAR 'J'
+#define WATER_LEVEL_CHAR 'J'
 #define HUMIDITY_CHAR 'K'
 #define SOUND_SENSOR 'L'
 #define SMOKE_SENSOR 'M'
 #define FLAME_SENSOR 'N'
+
+#define DHTTYPE DHT11
 
 Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
 
@@ -57,11 +59,11 @@ void setup()
   pinMode(irSensor2, INPUT); 
   pinMode(irSensor3, INPUT);
   pinMode(irSensor4, INPUT);
-  pinMode(irSensor5, INPUT)
+  pinMode(irSensor5, INPUT);
   pinMode(photocellPin, INPUT);
   pinMode(temperaturePin, INPUT);
   pinMode(humidityPin, INPUT);
-  pinMode(smokePin, INPUT);
+  pinMode(waterSensor, INPUT);
   pinMode(flamePin, INPUT);
 
   ss.begin(0x36);
@@ -70,16 +72,16 @@ void setup()
   pinMode(buzzerPin, OUTPUT);
 
   // IR sensor
-  attachInterrupt(digitalPinToInterrupt(irSensor1), irSensor1_ISR, FALLING); 
-  attachInterrupt(digitalPinToInterrupt(irSensor2), irSensor2_ISR, FALLING); 
+  // attachInterrupt(digitalPinToInterrupt(irSensor1), irSensor1_ISR, FALLING); 
+  // attachInterrupt(digitalPinToInterrupt(irSensor2), irSensor2_ISR, FALLING); 
 
 }
 
 // test bluetooth to read msg from mega
 void loop() 
 {
-  if (digitalRead(irSensor1) || digitalRead(irSensor2) || digitalRead(irSensor3) || digitalRead(irSensor4) || digitalRead(irSensor5) ||) {
-    tone(buzzerPin, 100);
+  if (digitalRead(irSensor1) || digitalRead(irSensor2) || digitalRead(irSensor3) || digitalRead(irSensor4) || digitalRead(irSensor5)) {
+    // tone(buzzerPin, 100);
   } else {
     noTone(buzzerPin);
   }
@@ -200,32 +202,47 @@ void loop()
         BTSerial.write('L');
       }
     } else if (BT == HUMIDITY_CHAR) {
-      uint8_t humidityReading = dht.readHumidity();
-      BTSerial.write(humidityReading);
-    } else if (BT == SMOKE_SENSOR) {
+      uint16_t humidityReading = dht.readHumidity();
+      uint8_t hi = humidityReading >> 8;
+      uint8_t lo = humidityReading & 0xFF;
+      BTSerial.write(hi);
+      BTSerial.write(lo);
+      
+    } 
+    // else if (BT == SMOKE_SENSOR) {
+    //   // data send protocol for the fourth IR sensor
+    //   // sends H or L for high or low
+    //   if (digitalRead(smokePin) == HIGH) {
+    //     BTSerial.write('H');
+    //   } else {
+    //     BTSerial.write('L');
+    //   }
+    // } 
+    else if (BT == FLAME_SENSOR) {
       // data send protocol for the fourth IR sensor
       // sends H or L for high or low
-      if (digitalRead(smokePin) == HIGH) {
+      int sensorReading  = analogRead(flamePin);
+      // map the sensor range (four options):
+	    int range = map(sensorReading,  0, 1024, 0, 3);
+      if (range == 0) {
         BTSerial.write('H');
       } else {
         BTSerial.write('L');
       }
-    } else if (BT == FLAME_SENSOR) {
-      // data send protocol for the fourth IR sensor
-      // sends H or L for high or low
-      if (digitalRead(flamePin) == HIGH) {
-        BTSerial.write('H');
-      } else {
+    } else if (BT == WATER_LEVEL_CHAR) {
+      int sensorReading = analogRead(waterSensor);
+      if (sensorReading < 10) {
         BTSerial.write('L');
+      } else {
+        BTSerial.write('H');
       }
-    } else if (BT == AIR_QUALITY_CHAR) {
-      int airQuality = data.particles_50um;
+      }
     } else {
       // command char not recognized, do nothing
       // Serial.println("char not recognized");
     }
-  }
 }
+
 
 
 // IR sensors ISR

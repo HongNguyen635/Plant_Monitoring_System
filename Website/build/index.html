@@ -162,18 +162,18 @@
                 </li>
 
 
-                <!-- air quality sensor -->
+                <!-- water level sensor -->
                 <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
                     <div class="flex justify-between">
-                        <h3 class="mt-2 text-xl font-semibold">Air Quality</h3>
-                        <h3 class="text-2xl font-semibold">&#127811;</h3>
+                        <h3 class="mt-2 text-xl font-semibold">Water Level</h3>
+                        <h3 class="text-2xl font-semibold">&#128167;</h3>
 
                     </div>
                     <div class="flex justify-between mt-2">
                         <span>
-                            Air Quality Index:
+                            Current Status:
                         </span>
-                        <span id="air-quality-sensor">
+                        <span id="water-level">
                             0
                         </span>
                     </div>
@@ -195,26 +195,6 @@
                         </span>
                         <span>
                             %
-                        </span>
-                    </div>
-                </li>
-
-                <!-- sound sensor -->
-                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
-                    <div class="flex justify-between">
-                        <h3 class="mt-2 text-xl font-semibold">Sound Detection</h3>
-                        <h3 class="text-2xl font-semibold">&#128266;</h3>
-
-                    </div>
-                    <div class="flex justify-between mt-2">
-                        <span>
-                            Total noise detected:
-                        </span>
-                        <span id="sound-sensor">
-                            0
-                        </span>
-                        <span>
-                            times
                         </span>
                     </div>
                 </li>
@@ -568,7 +548,7 @@
 
         xhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("brightness-lightt").innerHTML = this.responseText
+                document.getElementById("brightness-light").innerHTML = this.responseText
             }
         }
 
@@ -691,10 +671,10 @@
             document.getElementById("ir-sensor").innerHTML = "Object Detected!";
         }
 
-        // air quality
-        xmldoc = xmlResponse.getElementsByTagName("AQ");
+        // water level
+        xmldoc = xmlResponse.getElementsByTagName("WL");
         message = xmldoc[0].firstChild.nodeValue;
-        document.getElementById("air-quality-sensor").innerHTML = message;
+        document.getElementById("water-level").innerHTML = message;
 
         // humidity
         xmldoc = xmlResponse.getElementsByTagName("H");

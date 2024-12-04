@@ -32,7 +32,7 @@ HardwareSerial espSerial(2); // use UART2
 #define MOISTURE_CHAR 'C'
 #define TEMP_SOIL_CHAR 'D'
 #define INTRUSION_DETECTED_CHAR 'I'
-#define AIR_QUALITY_CHAR 'J'
+#define WATER_LEVEL_CHAR 'J'
 #define HUMIDITY_CHAR 'K'
 #define SOUND_SENSOR 'L'
 #define SMOKE_SENSOR 'M'
@@ -53,12 +53,12 @@ HardwareSerial espSerial(2); // use UART2
 bool isIntrusionDetected = false;
 bool isSmokeDetected = false;
 bool isFlameDetected = false;
+bool waterLevel = false; // true = full, false = empty
 uint8_t airTempSensor = 0;
 uint8_t moistureSensor = 0;
 uint8_t soilTempSensor = 0;
-uint8_t airQualitySensor = 0;
-uint8_t humiditySensor = 0;
 uint8_t countSoundSensor = 0;
+String humiditySensor = "0";
 String photocellSensor = "Dark";
 String ledColor = "RGB";
 
@@ -87,6 +87,8 @@ WebServer server(80);
 void setup() {
   Serial.begin(9600); // serial monitor
   espSerial.begin(9600, SERIAL_8N1, RX2, TX2); // UART
+
+  Serial.println("Hey");
 
 
   // when web page are large, might not get a call back from the webpage
@@ -123,6 +125,7 @@ void setup() {
   Serial.print("IP address: "); Serial.println(Actual_IP);
 #endif
 
+  Serial.println("Before");
   printWifiStatus();
 
 
@@ -184,12 +187,13 @@ void loop() {
       isIntrusionDetected = espSerial.read();
       break;
 
-      case AIR_QUALITY_CHAR:
-      airQualitySensor = espSerial.read();
+      case WATER_LEVEL_CHAR:
+      waterLevel = espSerial.read();
       break;
 
       case HUMIDITY_CHAR:
-      humiditySensor = espSerial.read();
+      humiditySensor = espSerial.readStringUntil('\n');
+      humiditySensor.trim();
       break;
 
       case SOUND_SENSOR:
@@ -255,7 +259,7 @@ void updateAirTemp() {
   airTempSensor = espSerial.read();
   
   strcpy(buf, "");
-  sprintf(buf, "%d", temp);
+  sprintf(buf, "%d", airTempSensor);
   server.send(200, "text/plain", buf);
 }
 
@@ -270,8 +274,8 @@ void updateSoil() {
 
   // Prepare XML response
   String xmlResponse = "<data>";
-  xmlResponse += "<moisture>" + String(moisture) + "</moisture>";
-  xmlResponse += "<temp>" + String(soilTemp) + "</temp>";
+  xmlResponse += "<moisture>" + String(moistureSensor) + "</moisture>";
+  xmlResponse += "<temp>" + String(soilTempSensor) + "</temp>";
   xmlResponse += "</data>";
   
   server.send(200, "text/xml", xmlResponse);
@@ -287,7 +291,7 @@ void updatePhotocell() {
   photocellSensor.trim(); // trim white space
   
   strcpy(buf, "");
-  sprintf(buf, "%s", status);
+  sprintf(buf, "%s", photocellSensor);
   server.send(200, "text/plain", buf);
 }
 
@@ -315,7 +319,7 @@ void growLightBtn() {
 
 void brightnessBtn() {
   // toggle dim/bright
-  isLightDim = !isLightDim
+  isLightDim = !isLightDim;
   espSerial.print(LED_BRIGHTNESS_CHAR);
   espSerial.print(isLightDim);
   
@@ -409,12 +413,12 @@ void SendXML() {
   sprintf(buf, "<IR>%d</IR>\n", isIntrusionDetected ? 1 : 0);
   strcat(XML, buf);
 
-  // send air quality
-  sprintf(buf, "<AQ>%d</AQ>\n", airQualitySensor);
+  // send water level
+  sprintf(buf, "<WL>%s</WL>\n", waterLevel ? "Ok" : "Empty");
   strcat(XML, buf);
 
   // send humidity
-  sprintf(buf, "<H>%d</H>\n", humiditySensor);
+  sprintf(buf, "<H>%s</H>\n", humiditySensor);
   strcat(XML, buf);
 
   // send sound

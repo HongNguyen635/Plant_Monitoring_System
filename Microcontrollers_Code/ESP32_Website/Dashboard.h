@@ -59,7 +59,6 @@
 // again I hate strings, so char is it and this method let's us write naturally
 
 const char PAGE_MAIN[] PROGMEM = R"=====(
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -697,6 +696,10 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         margin-bottom: 3rem;
     }
 
+    .mb-2 {
+        margin-bottom: 0.5rem;
+    }
+
     .mb-6 {
         margin-bottom: 1.5rem;
     }
@@ -707,10 +710,6 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
 
     .mt-4 {
         margin-top: 1rem;
-    }
-
-    .mb-2 {
-        margin-bottom: 0.5rem;
     }
 
     .block {
@@ -827,20 +826,20 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         justify-items: center;
     }
 
-    .gap-8 {
-        gap: 2rem;
-    }
-
-    .gap-4 {
-        gap: 1rem;
-    }
-
     .gap-1 {
         gap: 0.25rem;
     }
 
     .gap-2 {
         gap: 0.5rem;
+    }
+
+    .gap-4 {
+        gap: 1rem;
+    }
+
+    .gap-8 {
+        gap: 2rem;
     }
 
     .self-center {
@@ -879,6 +878,10 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
     }
 
+    .p-1 {
+        padding: 0.25rem;
+    }
+
     .p-2 {
         padding: 0.5rem;
     }
@@ -893,10 +896,6 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
 
     .p-8 {
         padding: 2rem;
-    }
-
-    .p-1 {
-        padding: 0.25rem;
     }
 
     .px-4 {
@@ -1026,7 +1025,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     }
 </style>
 
-<body class="bg-emerald-50">
+<body class="bg-emerald-50" onload="process()">
     <header class="bg-green-900 text-white top-0 sticky">
         <section class="max-w-4xl flex mx-auto p-3 px-6 justify-center items-center">
             <h1 class="text-3xl font-roboto font-medium">
@@ -1179,19 +1178,19 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
                 </li>
 
 
-                <!-- air quality sensor -->
+                <!-- water level sensor -->
                 <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
                     <div class="flex justify-between">
-                        <h3 class="mt-2 text-xl font-semibold">Air Quality</h3>
-                        <h3 class="text-2xl font-semibold">&#127811;</h3>
+                        <h3 class="mt-2 text-xl font-semibold">Water Level</h3>
+                        <h3 class="text-2xl font-semibold">&#128167;</h3>
 
                     </div>
                     <div class="flex justify-between mt-2">
                         <span>
-                            Air Quality Index:
+                            Current Status:
                         </span>
-                        <span id="air-quality-sensor">
-                            0
+                        <span id="water-level">
+                            Ok
                         </span>
                     </div>
                 </li>
@@ -1212,26 +1211,6 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
                         </span>
                         <span>
                             %
-                        </span>
-                    </div>
-                </li>
-
-                <!-- sound sensor -->
-                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
-                    <div class="flex justify-between">
-                        <h3 class="mt-2 text-xl font-semibold">Sound Detection</h3>
-                        <h3 class="text-2xl font-semibold">&#128266;</h3>
-
-                    </div>
-                    <div class="flex justify-between mt-2">
-                        <span>
-                            Total noise detected:
-                        </span>
-                        <span id="sound-sensor">
-                            0
-                        </span>
-                        <span>
-                            times
                         </span>
                     </div>
                 </li>
@@ -1585,7 +1564,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
 
         xhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("brightness-lightt").innerHTML = this.responseText
+                document.getElementById("brightness-light").innerHTML = this.responseText
             }
         }
 
@@ -1596,11 +1575,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     function lightRedBtnPress() {
         var xhttp = new XMLHttpRequest();
 
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("light-color").innerHTML = this.responseText
-            }
-        }
+        document.getElementById("light-color").innerHTML = "Red";
 
         xhttp.open("PUT", "/redBtn", false);
         xhttp.send();
@@ -1609,11 +1584,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     function lightGreenBtnPress() {
         var xhttp = new XMLHttpRequest();
 
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("light-color").innerHTML = this.responseText
-            }
-        }
+        document.getElementById("light-color").innerHTML = "Green";
 
         xhttp.open("PUT", "/greenBtn", false);
         xhttp.send();
@@ -1622,11 +1593,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     function lightBlueBtnPress() {
         var xhttp = new XMLHttpRequest();
 
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("light-color").innerHTML = this.responseText
-            }
-        }
+        document.getElementById("light-color").innerHTML = "Blue";
 
         xhttp.open("PUT", "/blueBtn", false);
         xhttp.send();
@@ -1635,11 +1602,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     function rgbBtnPress() {
         var xhttp = new XMLHttpRequest();
 
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                document.getElementById("light-color").innerHTML = this.responseText
-            }
-        }
+        document.getElementById("light-color").innerHTML = "RGB";
 
         xhttp.open("PUT", "/rgbBtn", false);
         xhttp.send();
@@ -1683,7 +1646,107 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
 
     // function to handle the response from the ESP
     // TODO: complete this. 349
-    function response() { }
+    function response() {
+        var message;
+        var xmlResponse;
+        var xmldoc;
+
+        // get the xml stream
+        xmlResponse = xmlHttp.responseXML;
+
+
+        // Air temp
+        xmldoc = xmlResponse.getElementsByTagName("AT");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        // update on website
+        document.getElementById("air-temp-f").innerHTML = message;
+
+        // moisture
+        xmldoc = xmlResponse.getElementsByTagName("M");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("soil-moisture").innerHTML = message;
+
+        // soil temp
+        xmldoc = xmlResponse.getElementsByTagName("ST");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("soil-temp-f").innerHTML = message;
+
+        // photocell
+        xmldoc = xmlResponse.getElementsByTagName("P");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("photocell").innerHTML = message;
+
+        // ir
+        xmldoc = xmlResponse.getElementsByTagName("IR");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        if (message == 0) {
+            document.getElementById("ir-sensor").innerHTML = "Clear";
+        } else {
+            document.getElementById("ir-sensor").innerHTML = "Object Detected!";
+        }
+
+        // water level
+        xmldoc = xmlResponse.getElementsByTagName("WL");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("water-level").innerHTML = message;
+
+        // humidity
+        xmldoc = xmlResponse.getElementsByTagName("H");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("humidity-sensor").innerHTML = message;
+
+        // sound
+        xmldoc = xmlResponse.getElementsByTagName("S");
+        message = xmldoc[0].firstChild.nodeValue;
+        // document.getElementById("sound-sensor").innerHTML = message;
+
+        // smoke
+        xmldoc = xmlResponse.getElementsByTagName("SK");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        if (message == 0) {
+            document.getElementById("smoke-sensor").innerHTML = "Clear";
+        } else {
+            document.getElementById("smoke-sensor").innerHTML = "Smoke Detected!";
+        }
+
+        // flame
+        xmldoc = xmlResponse.getElementsByTagName("F");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        if (message == 0) {
+            document.getElementById("flame-sensor").innerHTML = "Clear";
+        } else {
+            document.getElementById("flame-sensor").innerHTML = "Flame Detected!";
+        }
+
+        // led status
+        xmldoc = xmlResponse.getElementsByTagName("LED");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        if (message == 0) {
+            document.getElementById("grow-light").innerHTML = "On";
+        } else {
+            document.getElementById("grow-light").innerHTML = "Off";
+        }
+
+        // led brightness
+        xmldoc = xmlResponse.getElementsByTagName("BRI");
+        message = xmldoc[0].firstChild.nodeValue;
+
+        if (message == 0) {
+            document.getElementById("brightness-light").innerHTML = "Dim";
+        } else {
+            document.getElementById("brightness-light").innerHTML = "Bright";
+        }
+
+        // led color
+        xmldoc = xmlResponse.getElementsByTagName("CO");
+        message = xmldoc[0].firstChild.nodeValue;
+        document.getElementById("light-color").innerHTML = message;
+    }
 
     // general processing code for the web page to ask for an XML stream
     // this is actually why you need to keep sending data to the page to
@@ -1705,7 +1768,5 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
 </script>
 
 </html>
-
-
 
 )=====";

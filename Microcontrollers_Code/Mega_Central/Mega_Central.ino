@@ -6,7 +6,12 @@
 // components pins
 #define displaySDA 20
 #define displaySCL 21
-#define pumpPin 2
+#define pumpPin 7
+#define buzzerPin 9
+
+#define ledRed 5
+#define ledBlue 6
+#define ledGreen 4
 
 // bluetooth assigned char
 #define PHOTOCELL_CHAR 'A'
@@ -19,7 +24,7 @@
 #define IR_SENSOR4 'H'
 #define IR_SENSOR5 'Z'
 #define INTRUSION_DETECTED_CHAR 'I'
-#define AIR_QUALITY_CHAR 'J'
+#define WATER_LEVEL_CHAR 'J'
 #define HUMIDITY_CHAR 'K'
 #define SOUND_SENSOR 'L'
 #define SMOKE_SENSOR 'M'
@@ -36,11 +41,31 @@
 #define CLEAR_DISPLAY_CHAR 'X'
 #define CONFIG_CHAR 'Y'
 
-int counter = 0;
+uint32_t counter = 0;
 
+// components status
+// pump
 bool pumpOn = false;
-bool pumpOff = false;
-int pumpStart = 0;
+uint32_t pumpStart = 0;
+
+// led
+bool isLedManual = false;
+bool isLedOn = false;
+char ledColor = 'A'; // A = RGB
+bool isLedDim = false;
+uint32_t ledRGBstart = 0;
+char allColorCurrent = 'R';
+
+// buzzer
+bool isBuzzerOn = false;
+uint32_t buzzerStart = 0;
+
+// display
+String messages [] = {"There are no gardening mistakes, only experiments",
+                      "A beautiful plant is like having a friend around the house",
+                      "Ah ha ha ha, keep me alive, please"};
+uint8_t msgIndex = 0;
+
 
 int photocellReading = 0;
 int tempReading = 0;
@@ -54,6 +79,7 @@ bool IR5Reading = 0;
 int humidityReading = 0;
 bool smokeReading = 0;
 bool flameReading = 0;
+bool waterReading = 0;
 
 int photocellPeriod = 0;
 int tempPeriod = 0;
@@ -64,8 +90,8 @@ int IR2Period = 1;
 int IR3Period = 1;
 int IR4Period = 1;
 int IR5Period = 1;
-int humidityPeriod = 0;
-int smokePeriod = 1;
+int humidityPeriod = 1;
+int waterPeriod = 1;
 int flamePeriod = 1;
 
 bool readPhotocell = false;
@@ -78,8 +104,12 @@ bool readIR3 = false;
 bool readIR4 = false;
 bool readIR5 = false;
 bool readHumidity = false;
-bool readSmoke = false;
+bool readWater = false;
 bool readFlame = false;
+
+// keep track of the total messages
+uint32_t websiteCommandCount = 0;
+uint32_t centralToPeripheralCount = 0;
 
 // setup bluetooth
 SoftwareSerial BTSerial(12, 2); // RX, TX
@@ -95,6 +125,13 @@ void setup()
   Serial1.begin(9600); // Hardware UART
   lcd.backlight();
   lcd.init(); 
+
+  pinMode(buzzerPin, OUTPUT);
+
+  pinMode(ledRed, OUTPUT);
+  pinMode(ledBlue, OUTPUT);
+  pinMode(ledGreen, OUTPUT);
+
   // Serial.println("works");
   Timer1.initialize(1000000);
   // Serial.println("works");
@@ -111,63 +148,165 @@ void loop()
     // read in the char
     char cmd = Serial1.read();
 
+    // increment the command count
+    ++websiteCommandCount;
+
     switch (cmd) {
       case CONFIG_CHAR:
-      // TODO:
+        // save the update rate
+        String tempRate = Serial1.readStringUntil('\n');
+        String soilRate = Serial1.readStringUntil('\n');
+        String photocellRate = Serial1.readStringUntil('\n');
+
+        tempPeriod = tempRate.toInt();
+        tempSoilPeriod = soilRate.toInt();
+        photocellPeriod = photocellRate.toInt();
+
+        // print config info
+        Serial.println("New configurations:");
+        Serial.print("Air temperature rate: ");
+        Serial.println(tempRate);
+        Serial.print("Moisture & soil temperature rate: ");
+        Serial.println(soilRate);
+        Serial.print("Photocell sensor rate: ");
+        Serial.println(photocellRate);
+
       break;
 
       case TEMP_CHAR:
-      // TODO:
+        // ask for new data
+        requestTemp();
+
+        // convert to human-readable
+        uint8_t convertedTemp = convertTemperatureSensor();
+
+        Serial1.print(TEMP_CHAR);
+        Serial1.print(convertedTemp); // send to website
+
+        // print report
+        Serial.print("Temperature Sensor, raw reading: ");
+        Serial.println(tempReading);
+        Serial.println("Report mode: on-demand");
+
       break;
 
       case MOISTURE_CHAR:
-      // TODO: note, esp32 expects moisture 1st, then temp
+        requestMoisture();
+        requestTempSoil();
+        uint8_t newTempSoil = covertTempSoilSensor();
+        uint8_t newMoisture = convertMoistureSensor();
+
+        // send to esp32
+        Serial1.print(MOISTURE_CHAR);
+        Serial1.print(newMoisture);
+        Serial1.print(newTempSoil);
+
+        // print report
+        Serial.print("Moisture Sensor, raw reading: ");
+        Serial.println(moistureReading);
+        Serial.print("Soil Temperature, raw reading: ");
+        Serial.println(tempSoilReading);
+        Serial.println("Report mode: on-demand");
+
       break;
 
       case PHOTOCELL_CHAR:
-      // TODO:
+        // read
+        requestPhotocell();
+        String photocellStatus = convertPhototocellSensor();
+
+        // send to ESP32
+        Serial1.print(PHOTOCELL_CHAR);
+        Serial1.println(photocellStatus);
+
+        // print report
+        Serial.print("Photocell Sensor, raw reading: ");
+        Serial.println(photocellReading);
+        Serial.println("Report mode: on-demand");
+
       break;
 
       case WATER_CMD_CHAR:
-      // TODO:
+        // turn on the pump
+        digitalWrite(pumpPin, HIGH);
+        pumpStart = millis();
+        pumpOn = true;
       break;
 
       case TOGGLE_LED_CHAR:
-      // TODO:
+        // toggle the LED
+        toggleLED();
+
+        // also if you manually turn it on,
+        // you need to manually turn it off
+        if (isLedManual && !isLedOn) {
+          isLedManual = false;
+        } else if (isLedOn) {
+          isLedManual = true;
+        }
+
       break;
 
       case LED_BRIGHTNESS_CHAR:
-      // TODO:
+        toggleBrightness();
       break;
 
       case LED_RED_CHAR:
-      // TODO:
+        ledColor = 'R';
+        
+        if (isLedOn) {
+          turnOnLED; // switch color
+        }
       break;
 
       case LED_BLUE_CHAR:
-      // TODO:
+        ledColor = 'B';
+        
+        if (isLedOn) {
+          turnOnLED; // switch color
+        }
       break;
 
       case LED_GREEN_CHAR:
-      // TODO:
+        ledColor = 'G';
+        
+        if (isLedOn) {
+          turnOnLED; // switch color
+        }
       break;
 
       case LED_RGB_CHAR:
-      // TODO:
+        ledColor = 'A';
+        
+        if (isLedOn) {
+          turnOnLED; // switch color
+        }
       break;
 
       case BUZZER_CMD_CHAR:
-      // TODO:
+        tone(buzzerPin, 100);
+        isBuzzerOn = true;
+        buzzerStart = millis();
       break;
 
       case WRITE_DISPLAY_CHAR:
-      // TODO:
+        // choose a msg and write to the display
+        lcd.clear();
+        lcd.print(messages[msgIndex]);
+        ++msgIndex;
+        if (msgIndex == 3) {
+          msgIndex = 0;
+        }
       break;
 
       case CLEAR_DISPLAY_CHAR:
-      // TODO:
+        lcd.clear();
       break;
     }
+
+    Serial.print("\nTotal commands from website: ");
+    Serial.println(websiteCommandCount);
+    Serial.println();
   }
 
   // BTSerial.write('1');
@@ -207,30 +346,58 @@ void loop()
   // }
   if (readPhotocell) {
     requestPhotocell();
-    Serial.print("Photocell Reading: ");
+    Serial.print("Photocell Sensor, raw reading: ");
     Serial.println(photocellReading);
+    Serial.println("Report mode: periodical");
     readPhotocell = false;
+
+    // sent to website
+    String photocellStatus = convertPhototocellSensor();
+
+    // send to ESP32
+    Serial1.print(PHOTOCELL_CHAR);
+    Serial1.println(photocellStatus);
   }
   if (readTemp) {
     requestTemp();
-    Serial.print("temperature Reading: ");
+    Serial.print("Temperature Sensor, raw reading: ");
     Serial.println(tempReading);
+    Serial.println("Report mode: periodical");
     readTemp = false;
+
+    // convert to human-readable
+    uint8_t convertedTemp = convertTemperatureSensor();
+
+    Serial1.print(TEMP_CHAR);
+    Serial1.print(convertedTemp); // send to website
   }
   if (readMoisture) {
     requestMoisture();
-    Serial.print("moisture Reading: ");
+    Serial.print("Moisture Sensor, raw reading: ");
     Serial.println(moistureReading);
+    Serial.println("Report mode: periodical");
     readMoisture = false;
   }
   if (readTempSoil) {
     requestTempSoil();
-    Serial.print("soil temp Reading: ");
+    Serial.print("Soil Temperature, raw reading: ");
     Serial.println(tempSoilReading);
+    Serial.println("Report mode: periodical");
     readTempSoil = false;
+
+    uint8_t newTempSoil = covertTempSoilSensor();
+    uint8_t newMoisture = convertMoistureSensor();
+
+    // send to esp32
+    Serial1.print(MOISTURE_CHAR);
+    Serial1.print(newMoisture);
+    Serial1.print(newTempSoil);
   }
   if (readIR1) {
     requestIR1();
+    Serial1.print(INTRUSION_DETECTED_CHAR); // send to esp32
+    Serial1.print(IR1Reading);
+
     if (IR1Reading == true) {
       Serial.println("IR1: object detected");
     } else {
@@ -240,6 +407,10 @@ void loop()
   }
   if (readIR2) {
     requestIR2();
+
+    Serial1.print(INTRUSION_DETECTED_CHAR); // send to esp32
+    Serial1.print(IR2Reading);
+
     if (IR2Reading == true) {
       Serial.println("IR2: object detected");
     } else {
@@ -249,6 +420,10 @@ void loop()
   }
   if (readIR3) {
     requestIR3();
+
+    Serial1.print(INTRUSION_DETECTED_CHAR); // send to esp32
+    Serial1.print(IR3Reading);
+
     if (IR3Reading == true) {
       Serial.println("IR3: object detected");
     } else {
@@ -258,6 +433,10 @@ void loop()
   }
   if (readIR4) {
     requestIR4();
+
+    Serial1.print(INTRUSION_DETECTED_CHAR); // send to esp32
+    Serial1.print(IR4Reading);
+
     if (IR4Reading == true) {
       Serial.println("IR4: object detected");
     } else {
@@ -267,6 +446,10 @@ void loop()
   }
   if (readIR5) {
     requestIR5();
+
+    Serial1.print(INTRUSION_DETECTED_CHAR); // send to esp32
+    Serial1.print(IR5Reading);
+
     if (IR5Reading == true) {
       Serial.println("IR5: object detected");
     } else {
@@ -276,21 +459,44 @@ void loop()
   }
   if (readHumidity) {
     requestHumidity();
+
+    // send to ESP32
+    Serial1.print(HUMIDITY_CHAR);
+    Serial1.println(humidityReading);
+
     Serial.print(humidityReading);
     Serial.println("\% humidity level");
     readHumidity = false;
   }
-  if (readSmoke) {
-    requestSmoke();
-    if (smokeReading == true) {
-      Serial.println("smoke detected");
-    } else {
-      Serial.println("no smoke detected");
-    }
-    readSmoke = false;
+  if (readWater) {
+    requestWater();
+
+    Serial1.print(WATER_LEVEL_CHAR);
+    Serial1.println(waterReading);
+
+    if (waterReading == false) {
+      Serial.println("water is empty");
+    } 
+    readWater = false;
   }
+
+  // if (readSmoke) {
+  //   requestSmoke();
+  //   if (smokeReading == true) {
+  //     Serial.println("smoke detected");
+  //   } else {
+  //     Serial.println("no smoke detected");
+  //   }
+  //   readSmoke = false;
+  // }
+
+
   if (readFlame) {
     requestFlame();
+
+    Serial1.print(FLAME_SENSOR);
+    Serial1.println(flameReading);
+
     if (flameReading == true) {
       Serial.println("flame detected");
     } else {
@@ -298,58 +504,108 @@ void loop()
     }
     readFlame = false;
   }
-  if (pumpOn) {
-    pumpOff = true;
-    pumpStart = counter;
-    pumpOn = false;
+
+  // pump
+  // if moisture drop below 50%
+  if (moistureReading != 0 && moistureReading < 900) {
+    pumpStart = millis();
     digitalWrite(pumpPin, HIGH);
   }
-  if (pumpOff && counter - pumpStart >= 300) {
-    pumpOff = false;
+  if (pumpOn && ((millis() - pumpStart) >= 3000)) {
+    pumpOn = false;
     digitalWrite(pumpPin, LOW);
+  }
+
+  // led
+  if (photocellReading != 0 && photocellReading < 300) {
+    // if the user manually turn it off, don't turn it on
+    if (!isLedManual && !isLedOn) {
+      turnOnLED();
+    }
+  } else if (photocellReading >= 300) {
+    // light, turn off
+    // also, if user manually turn it on, don't turn
+    // it off
+    if (!isLedManual && isLedOn) {
+      turnOffLED();
+    }
+  }
+
+  // if led on and is blinking rgb
+  if (isLedOn && ledColor == 'A') {
+    // check if 3s has passed
+    if (millis() - ledRGBstart > 3000) {
+      // switch to the next color & save the previous color
+      uint8_t currentPin = ledBlue;
+      switch (allColorCurrent) {
+        case 'R':
+          currentPin = ledBlue;
+          allColorCurrent = ledGreen;
+          break;
+
+        case 'G':
+          currentPin = ledGreen;
+          allColorCurrent = ledBlue;
+          break;
+
+        case 'B':
+          currentPin = ledBlue;
+          allColorCurrent = ledRed;
+          break;
+      }
+
+      // turn the next color on
+      turnNextColor(currentPin, allColorCurrent);
+    }
+  }
+
+  // buzzer
+  if (isBuzzerOn && (millis() - buzzerStart > 2000)) {
+    noTone(buzzerPin);
+    isBuzzerOn = false;
   }
 }
 
 void sensorCheck(void) {
   counter++;
-  if (counter % photocellPeriod == 0 && photocellPeriod > 0) {
+  if (photocellPeriod > 0 && counter % photocellPeriod == 0) {
     // requestPhotocell();
     readPhotocell = true;
   }
-  if (counter % tempPeriod == 0 && tempPeriod > 0) {
+  if (tempPeriod > 0 && counter % tempPeriod == 0) {
     // requestTemp();
     readTemp = true;
   }
-  if (counter % moisturePeriod == 0 && moisturePeriod > 0) {
+  if (moisturePeriod > 0 && counter % moisturePeriod == 0) {
     // requestMoisture();
     readMoisture = true;
   }
-  if (counter % tempSoilPeriod == 0 && tempSoilPeriod > 0) {
+  if (tempSoilPeriod > 0 && counter % tempSoilPeriod == 0) {
     // requestTempSoil();
     readTempSoil = true;
   } 
-  if (counter % IR1Period == 0 && IR1Period > 0) {
+  if (IR1Period > 0 && counter % IR1Period == 0) {
     readIR1 = true;
   }
-  if (counter % IR2Period == 0 && IR2Period > 0) {
+  if (IR2Period > 0 && counter % IR2Period == 0) {
     readIR2 = true;
   }
-  if (counter % IR3Period == 0 && IR3Period > 0) {
+  if (IR3Period > 0 && counter % IR3Period == 0) {
     readIR3 = true;
   }
-  if (counter % IR4Period == 0 && IR4Period > 0) {
+  if (IR4Period > 0 && counter % IR4Period == 0) {
     readIR4 = true;
   }
-  if (counter % IR5Period == 0 && IR5Period > 0) {
+  if (IR5Period > 0 && counter % IR5Period == 0) {
     readIR5 = true;
   }
-  if (counter % humidityPeriod == 0 && humidityPeriod > 0) {
+  if (humidityPeriod > 0 && counter % humidityPeriod == 0) {
     readHumidity = true;
   }
-  if (counter % smokePeriod == 0 && smokePeriod > 0) {
-    readSmoke = true;
+  if (waterPeriod > 0 && counter % waterPeriod == 0) {
+    readWater = true;
   }
-  if (counter % flamePeriod == 0 && flamePeriod > 0) {
+  if (flamePeriod > 0 && counter % flamePeriod == 0) {
     readFlame = true;
   }
   Serial.println();
@@ -421,6 +677,13 @@ void requestFlame() {
   flameReading = (BT == 'H');
 }
 
+void requestWater() {
+  BTSerial.write(WATER_LEVEL_CHAR);
+  while (!BTSerial.available()) {}
+  char BT = BTSerial.read();
+  waterReading = (BT == 'H');
+}
+
 void requestTemp(void) {
   BTSerial.write(TEMP_CHAR);
   while (!BTSerial.available()) {}
@@ -453,10 +716,14 @@ void requestMoisture(void) {
 
 void requestHumidity(void) {
   BTSerial.write(HUMIDITY_CHAR);
-  while (!BTSerial.available()) {}
-  int BT = BTSerial.read();
+  while (!BTSerial.available() < 2) {}
+  uint8_t hi = BTSerial.read();
+  uint8_t lo = BTSerial.read();
+  uint16_t BT = (hi << 8) | lo;
   humidityReading = BT;
 }
+
+
 
 // --------------------------------------
 // SENSOR CONVERSION METHODS
@@ -500,3 +767,87 @@ uint8_t convertTemperatureSensor() {
   return returnTemp;
 }
 
+// convert soil temperature sensor
+uint8_t covertTempSoilSensor() {
+  // convert to F
+  float temperatureF = (tempReading * 9.0 / 5.0) + 32.0;
+
+  // change to int
+  uint8_t returnTemp = (uint8_t) temperatureF;
+
+  return returnTemp;
+}
+
+// comvert moisture sensor
+uint8_t convertMoistureSensor() {
+  uint8_t percentageHumididy  = map(moistureReading, 2000, 200, 100, 0);
+  return percentageHumididy;
+}
+
+// toggle the LED on or off
+void toggleLED() {
+  // if it's on, just turn off
+  if (isLedOn) {
+    turnOffLED();
+
+    // toggle the light
+    isLedOn = !isLedOn;
+    return;
+  }
+
+  turnOnLED();
+}
+
+// toggle the LED brightness
+void toggleBrightness() {
+  isLedDim = !isLedDim;
+  // if LED is not on, return
+  if (!isLedOn) return;
+
+  // else change the light
+  turnOnLED();
+}
+
+void turnOnLED() {
+  // get the color to turn on
+  uint8_t pinNumber = ledRed;
+
+  switch (ledColor) {
+    case 'B':
+      pinNumber = ledBlue;
+    break;
+
+    case 'G':
+      pinNumber = ledGreen;
+    break;
+
+    default:
+    // red or all
+    break;
+  }
+
+  // check the brightness setting
+  if (isLedDim) {
+    analogWrite(pinNumber, 10);
+  } else {
+    analogWrite(pinNumber, 1000);
+  }
+}
+
+void turnOffLED() {
+  analogWrite(ledRed, 0);
+  analogWrite(ledGreen, 0);
+  analogWrite(ledBlue, 0);
+}
+
+// rotate RGB
+void turnNextColor(uint8_t current, uint8_t next) {
+  analogWrite(current, 0);
+  
+  // check the brightness setting
+  if (isLedDim) {
+    analogWrite(next, 10);
+  } else {
+    analogWrite(next, 1000);
+  }
+} 
