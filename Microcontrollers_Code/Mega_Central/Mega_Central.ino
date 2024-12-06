@@ -80,18 +80,18 @@ bool smokeReading = 0;
 bool flameReading = 0;
 bool waterReading = 0;
 
-int photocellPeriod = 4;
-int tempPeriod = 5;
-int moisturePeriod = 0;
-int tempSoilPeriod = 0;
-int IR1Period = 0;
-int IR2Period = 0;
-int IR3Period = 0;
-int IR4Period = 0;
-int IR5Period = 3;
-int waterPeriod = 2;
-int flamePeriod = 0;
-int smokePeriod = 0;
+int photocellPeriod = 3;
+int tempPeriod = 3;
+int moisturePeriod = 4;
+int tempSoilPeriod = 4;
+int IR1Period = 2;
+int IR2Period = 2;
+int IR3Period = 2;
+int IR4Period = 2;
+int IR5Period = 2;
+int waterPeriod = 1;
+int flamePeriod = 5;
+int smokePeriod = 5;
 
 bool readPhotocell = false;
 bool readTemp = false;
@@ -179,7 +179,7 @@ void loop()
       // ask for new data
       requestTemp();
 
-      Serial.println("I'm here");
+      // Serial.println("I'm here");
 
       // convert to human-readable
       String convertedTemp = String(convertTemperatureSensor());
@@ -268,7 +268,7 @@ void loop()
     }
 
     else if (cmd == LED_RED_CHAR) {
-      Serial.println("Here")
+      Serial.println("Here");
       ledColor = 'R';
       
       if (isLedOn) {
@@ -309,7 +309,7 @@ void loop()
     }
 
     else if (cmd == BUZZER_CMD_CHAR) {
-      tone(buzzerPin, 100);
+      tone(buzzerPin, 1000);
       isBuzzerOn = true;
       buzzerStart = millis();
 
@@ -388,6 +388,11 @@ void loop()
     // send to ESP32
     Serial1.print(PHOTOCELL_CHAR);
     Serial1.println(photocellStatus);
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
   if (readTemp) {
     requestTemp();
@@ -401,6 +406,11 @@ void loop()
 
     Serial1.print(TEMP_CHAR);
     Serial1.println(convertedTemp); // send to website
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
   // if (readMoisture) {
   //   requestMoisture();
@@ -410,35 +420,57 @@ void loop()
   //   readMoisture = false;
   // }
   if (readMoisture) {
-  requestMoisture();
-  Serial.print("Soil Moisture, raw reading: ");
-  Serial.println(moistureReading);
-  Serial.println("Report mode: periodical");
-  readMoisture = false;
-
-  uint8_t newTempSoil = covertTempSoilSensor();
-  uint8_t newMoisture = convertMoistureSensor();
-
-  // send to esp32
-  Serial1.print(MOISTURE_CHAR);
-  Serial1.print(newMoisture);
-  Serial1.print(newTempSoil);
-  }
-  if (readTempSoil) {
+    requestMoisture();
     requestTempSoil();
-    Serial.print("Soil Temperature, raw reading: ");
-    Serial.println(tempSoilReading);
-    Serial.println("Report mode: periodical");
-    readTempSoil = false;
-
-    uint8_t newTempSoil = covertTempSoilSensor();
-    uint8_t newMoisture = convertMoistureSensor();
+    // moistureReading = 10;
+    // tempSoilReading = 20;
+    String newTempSoil = String(covertTempSoilSensor());
+    String newMoisture = String(convertMoistureSensor());
 
     // send to esp32
     Serial1.print(MOISTURE_CHAR);
-    Serial1.print(newMoisture);
-    Serial1.print(newTempSoil);
+    Serial1.println(newMoisture);
+    Serial1.println(newTempSoil);
+
+    // print report
+    Serial.print("Moisture Sensor, raw reading: ");
+    Serial.println(moistureReading);
+    Serial.print("Soil Temperature, raw reading: ");
+    Serial.println(tempSoilReading);
+    Serial.println("Report mode: periodical");
+
+    readMoisture = false;
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
+  // if (readTempSoil) {
+  //   requestTempSoil();
+  //   Serial.print("Soil Temperature, raw reading: ");
+  //   Serial.println(tempSoilReading);
+  //   Serial.println("Report mode: periodical");
+  //   readTempSoil = false;
+
+  //   String newTempSoil = String(covertTempSoilSensor());
+  //   String newMoisture = String(convertMoistureSensor());
+
+  //   // send to esp32
+  //   Serial1.print(MOISTURE_CHAR);
+  //   Serial1.println(newMoisture);
+  //   Serial1.println(newTempSoil);
+
+  //   // send to esp32
+  //   Serial1.print(MOISTURE_CHAR);
+  //   Serial1.print(newMoisture);
+  //   Serial1.print(newTempSoil);
+
+  //   ++centralToPeripheralCount;
+  //   Serial.print("\nTotal sensor data sent count:");
+  //   Serial.println(centralToPeripheralCount);
+  //   Serial.println();
+  // }
   if (readIR1) {
     requestIR1();
 
@@ -458,6 +490,11 @@ void loop()
       Serial.println("IR1: object detected");
     }
     readIR1 = false;
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
   if (readIR2) {
     requestIR2();
@@ -476,6 +513,11 @@ void loop()
       Serial.println("IR2: object detected");
     }
     readIR2 = false;
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
   if (readIR3) {
     requestIR3();
@@ -494,6 +536,11 @@ void loop()
       Serial.println("IR3: object detected");
     }
     readIR3 = false;
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
   if (readIR4) {
     requestIR4();
@@ -512,6 +559,11 @@ void loop()
       Serial.println("IR4: object detected");
     }
     readIR4 = false;
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
   if (readIR5) {
     requestIR5();
@@ -532,6 +584,11 @@ void loop()
       Serial.println("IR5: object detected");
     }
     readIR5 = false;
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
   if (readWater) {
     requestWater();
@@ -543,16 +600,30 @@ void loop()
       Serial.println("water is empty");
     } 
     readWater = false;
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
 
   if (readSmoke) {
     requestSmoke();
+
+    Serial1.print(SMOKE_SENSOR);
+    Serial1.println(String(smokeReading));
+
     if (smokeReading == true) {
       Serial.println("smoke detected");
     } else {
       Serial.println("no smoke detected");
     }
     readSmoke = false;
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
 
 
@@ -568,6 +639,11 @@ void loop()
       Serial.println("no flame detected");
     }
     readFlame = false;
+
+    ++centralToPeripheralCount;
+    Serial.print("\nTotal sensor data sent count:");
+    Serial.println(centralToPeripheralCount);
+    Serial.println();
   }
 
   // pump
@@ -841,21 +917,21 @@ int convertTemperatureSensor() {
 }
 
 // convert soil temperature sensor
-uint8_t covertTempSoilSensor() {
+int covertTempSoilSensor() {
   // convert to F
-  float temperatureF = (tempReading * 9.0 / 5.0) + 32.0;
+  float temperatureF = (tempSoilReading * 9.0 / 5.0) + 32.0;
 
   // change to int
-  uint8_t returnTemp = (uint8_t) temperatureF;
+  int returnTemp = (int) temperatureF;
 
   return returnTemp;
 }
 
 // comvert moisture sensor
-uint8_t convertMoistureSensor() {
-  // uint8_t percentageHumididy  = map(moistureReading, 2000, 200, 100, 0);
-  // return percentageHumididy;
-  return -1;
+int convertMoistureSensor() {
+  int newReading = 110 - moistureReading * 5;
+  int percentageHumididy  = map(moistureReading, 100, 40, 100, 0);
+  return percentageHumididy;
 }
 
 // toggle the LED on or off

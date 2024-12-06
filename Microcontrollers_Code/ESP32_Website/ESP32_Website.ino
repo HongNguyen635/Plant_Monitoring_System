@@ -12,8 +12,8 @@
 #define USE_INTRANET // comment this line out when go live
 
 // test with home wifi
-#define LOCAL_SSID ""
-#define LOCAL_PASS "!"
+#define LOCAL_SSID "DonaldWiFi"
+#define LOCAL_PASS "2121685!"
 
 // once read to go live these settings are what the client will connect to
 // (name & pass of the access point)
@@ -187,6 +187,11 @@ void loop() {
 
       moistureSensor.trim();
       soilTempSensor.trim();
+
+      Serial.print("moisture: ");
+      Serial.println(moistureSensor);
+      Serial.print("soil temp: ");
+      Serial.println(soilTempSensor);
     }
 
     else if (cmd == INTRUSION_DETECTED_CHAR) {
@@ -315,13 +320,18 @@ void updateSoil() {
   char cmd = '?';
   do {
     cmd = espSerial.read();
-  } while (cmd != TEMP_CHAR);
+  } while (cmd != MOISTURE_CHAR);
 
   moistureSensor = espSerial.readStringUntil('\n');
   soilTempSensor = espSerial.readStringUntil('\n');
 
   moistureSensor.trim();
   soilTempSensor.trim();
+
+  Serial.print("moisture: ");
+  Serial.println(moistureSensor);
+  Serial.print("soil temp: ");
+  Serial.println(soilTempSensor);
 
   // Prepare XML response
   String xmlResponse = "<data>";

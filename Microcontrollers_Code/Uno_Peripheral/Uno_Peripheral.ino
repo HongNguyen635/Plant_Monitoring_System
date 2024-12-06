@@ -18,7 +18,7 @@
 #define waterSensor A15
 #define flamePin A2
 #define smokePin 9
-#define moisturePin A3
+#define moisturePin A7
 #define pumpPin 12
 
 // bluetooth communication char
@@ -53,8 +53,9 @@
 
 // Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
 
-volatile bool objectPresentSensor1 = false;
+bool objectPresentSensor1 = false;
 bool objectPresentSensor2 = false;
+bool water = false;
 
 bool pumpOn = false;
 uint32_t pumpStart = 0;
@@ -101,8 +102,8 @@ void setup()
 // test bluetooth to read msg from mega
 void loop() 
 {
-  if (!digitalRead(irSensor1) || !digitalRead(irSensor2) || !digitalRead(irSensor3) || !digitalRead(irSensor4) || !digitalRead(irSensor5)) {
-    tone(buzzerPin, 100);
+  if (!digitalRead(irSensor1) || !digitalRead(irSensor2) || !digitalRead(irSensor3) || !digitalRead(irSensor4) || !digitalRead(irSensor5) || water) {
+    tone(buzzerPin, 1000);
   } else {
     noTone(buzzerPin);
   }
@@ -178,20 +179,6 @@ void loop()
       uint8_t tempReading = analogRead(temperaturePin);
       BTSerial.write(tempReading);
       Serial.println(tempReading);
-    } else if (BT == MOISTURE_CHAR) {
-      // data send protocol for the photocell resistor
-      uint16_t moisture = ss.touchRead(0);
-      //uint8_t moisture = ss.touchRead(0) / 8;
-      Serial.println("moisture: ");
-      Serial.println(moisture);
-      // uint8_t hi = moisture >> 8;
-      // uint8_t lo = moisture & 0xFF;
-      // send first byte
-      BTSerial.write(moisture);
-      // wait for ack
-      // while (!BTSerial.available()) {}
-      // send second byte
-      // BTSerial.write(lo);
     } else if (BT == TEMP_SOIL_CHAR) {
       // data send protocol for the temperature sensor
       // attached to the moisture sensor
@@ -237,6 +224,19 @@ void loop()
       } else {
         BTSerial.write('L');
       }
+    } else if (BT == MOISTURE_CHAR) {
+      uint8_t moisture = analogRead(moisturePin) / 5;
+      BTSerial.write(moisture);
+
+      Serial.println("raw moisture:");
+      Serial.println(moisture);
+
+      if (moisture > 85) {
+        pumpOn = true;
+        pumpStart = millis();
+        digitalWrite(pumpPin, HIGH);
+      }
+    
     } else if (BT == HUMIDITY_CHAR) {
       uint16_t humidityReading = dht.readHumidity();
       uint8_t hi = humidityReading >> 8;
@@ -269,8 +269,10 @@ void loop()
       int sensorReading = analogRead(waterSensor);
       Serial.println(sensorReading);
       if (sensorReading < 100) {
+        water = true;
         BTSerial.write('L');
       } else {
+        water = false;
         BTSerial.write('H');
       }
     } else if (BT == WATER_CMD_CHAR) {
@@ -289,6 +291,12 @@ void loop()
     pumpOn = false;
     }
   }
+
+    // if moisture drop below 50%
+  // if (moistureReading != 0 && moistureReading < 100) {
+  //   pumpStart = millis();
+  //   digitalWrite(pumpPin, HIGH);
+  // }
 }
 
 

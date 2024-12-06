@@ -1288,6 +1288,11 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
                         <h3 class="text-2xl font-semibold">&#128161;</h3>
 
                     </div>
+                    <div class="flex justify-between mt-2">
+                        <span>
+                            Toggle the LED grow light manually
+                        </span>
+                    </div>
 
                     <button type="button"
                         class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
