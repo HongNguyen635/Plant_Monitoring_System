@@ -12,8 +12,8 @@
 #define USE_INTRANET // comment this line out when go live
 
 // test with home wifi
-#define LOCAL_SSID "wifi_name"
-#define LOCAL_PASS "wifi_pass"
+#define LOCAL_SSID ""
+#define LOCAL_PASS ""
 
 // once read to go live these settings are what the client will connect to
 // (name & pass of the access point)
@@ -54,9 +54,9 @@ bool isIntrusionDetected = false;
 bool isSmokeDetected = false;
 bool isFlameDetected = false;
 bool waterLevel = false; // true = full, false = empty
-uint8_t airTempSensor = 0;
-uint8_t moistureSensor = 0;
-uint8_t soilTempSensor = 0;
+String airTempSensor = "0";
+String moistureSensor = "0";
+String soilTempSensor = "0";
 uint8_t countSoundSensor = 0;
 String humiditySensor = "0";
 String photocellSensor = "Dark";
@@ -168,59 +168,85 @@ void loop() {
     // read in the character & process
     char cmd = espSerial.read();
 
-    switch (cmd) {
-      case PHOTOCELL_CHAR:
+    // Serial.println(cmd);
+
+    
+    if (cmd == PHOTOCELL_CHAR) {
       photocellSensor = espSerial.readStringUntil('\n');
       photocellSensor.trim();
-      break;
+    }
 
-      case TEMP_CHAR:
-      airTempSensor = espSerial.read();
-      break;
+    else if (cmd == TEMP_CHAR) {
+      airTempSensor = espSerial.readStringUntil('\n');
+      airTempSensor.trim();
+    }
 
-      case MOISTURE_CHAR:
-      moistureSensor = espSerial.read();
-      soilTempSensor = espSerial.read();
-      break;
+    else if (cmd == MOISTURE_CHAR) {
+      moistureSensor = espSerial.readStringUntil('\n');
+      soilTempSensor = espSerial.readStringUntil('\n');
 
-      case INTRUSION_DETECTED_CHAR:
-      isIntrusionDetected = espSerial.read();
-      break;
+      moistureSensor.trim();
+      soilTempSensor.trim();
+    }
 
-      case WATER_LEVEL_CHAR:
-      waterLevel = espSerial.read();
-      break;
+    else if (cmd == INTRUSION_DETECTED_CHAR) {
+      String reading = espSerial.readStringUntil('\n');
+      reading.trim();
 
-      case HUMIDITY_CHAR:
+      isIntrusionDetected = reading.toInt();
+      
+      Serial.println(isIntrusionDetected);
+    }
+
+    else if (cmd == WATER_LEVEL_CHAR) {
+      String reading = espSerial.readStringUntil('\n');
+      reading.trim();
+      
+      waterLevel = reading.toInt();
+    }
+
+    else if (cmd == HUMIDITY_CHAR) {
       humiditySensor = espSerial.readStringUntil('\n');
       humiditySensor.trim();
-      break;
-
-      case SOUND_SENSOR:
-      ++countSoundSensor;
-      break;
-
-      case SMOKE_SENSOR:
-      isSmokeDetected = espSerial.read();
-      break;
-
-      case FLAME_SENSOR:
-      isFlameDetected = espSerial.read();
-      break;
-
-      case TOGGLE_LED_CHAR:
-      isLightOn = espSerial.read();
-      break;
-
-      case LED_BRIGHTNESS_CHAR:
-      isLightDim = espSerial.read();
-      break;
-
-      case LED_RGB_CHAR:
-      ledColor = espSerial.readStringUntil('\n');
-      ledColor.trim();
-      break;
     }
+
+    else if (cmd == SOUND_SENSOR) {
+      ++countSoundSensor;
+    }
+
+    else if (cmd == SMOKE_SENSOR) {
+      String reading = espSerial.readStringUntil('\n');
+      reading.trim();
+
+      isSmokeDetected = reading.toInt();
+    }
+
+    else if (cmd == FLAME_SENSOR) {
+      String reading = espSerial.readStringUntil('\n');
+      reading.trim();
+      
+      isFlameDetected = reading.toInt();
+    }
+
+    else if (cmd == TOGGLE_LED_CHAR) {
+      String reading = espSerial.readStringUntil('\n');
+      reading.trim();
+
+      isLightOn = reading.toInt();
+    }
+
+    // else if (cmd == LED_BRIGHTNESS_CHAR) {
+    //   String reading = espSerial.readStringUntil('\n');
+    //   reading.trim();
+
+    //   isLightDim = reading.toInt();
+    // }
+
+    // else if (cmd == LED_RGB_CHAR) {
+    //   ledColor = espSerial.readStringUntil('\n');
+    //   ledColor.trim();
+    // }
+    
   }
 
   // call this repeatedly or the web page won't get instructions
@@ -235,11 +261,11 @@ void loop() {
 void updateConfig() {
   // get all the configs
   String tempRate = server.arg("airTempRate");
-  String soilRate = server.arg("soldRate");
+  String soilRate = server.arg("soilRate");
   String photocellRate = server.arg("photocellRate");
 
   // send to central
-  espSerial.println(CONFIG_CHAR);
+  espSerial.print(CONFIG_CHAR);
   espSerial.println(tempRate);
   espSerial.println(soilRate);
   espSerial.println(photocellRate);
@@ -255,11 +281,19 @@ void updateAirTemp() {
 
   // discard any send in progress byte
   // and priortize this
-  while(!espSerial.available() && espSerial.read() != TEMP_CHAR) {}
-  airTempSensor = espSerial.read();
+  while(!espSerial.available()) {}
+
+  char cmd = '?';
+  do {
+    cmd = espSerial.read();
+  } while (cmd != TEMP_CHAR);
+
+  airTempSensor = espSerial.readStringUntil('\n');
+  airTempSensor.trim();
+  Serial.println(airTempSensor);
   
   strcpy(buf, "");
-  sprintf(buf, "%d", airTempSensor);
+  sprintf(buf, "%s", airTempSensor);
   server.send(200, "text/plain", buf);
 }
 
@@ -268,14 +302,23 @@ void updateSoil() {
 
   // discard any send in progress byte
   // and priortize this
-  while(!espSerial.available() && espSerial.read() != MOISTURE_CHAR) {}
-  moistureSensor = espSerial.read();
-  soilTempSensor = espSerial.read();
+  while(!espSerial.available()) {}
+  
+  char cmd = '?';
+  do {
+    cmd = espSerial.read();
+  } while (cmd != TEMP_CHAR);
+
+  moistureSensor = espSerial.readStringUntil('\n');
+  soilTempSensor = espSerial.readStringUntil('\n');
+
+  moistureSensor.trim();
+  soilTempSensor.trim();
 
   // Prepare XML response
   String xmlResponse = "<data>";
-  xmlResponse += "<moisture>" + String(moistureSensor) + "</moisture>";
-  xmlResponse += "<temp>" + String(soilTempSensor) + "</temp>";
+  xmlResponse += "<moisture>" + moistureSensor + "</moisture>";
+  xmlResponse += "<temp>" + soilTempSensor + "</temp>";
   xmlResponse += "</data>";
   
   server.send(200, "text/xml", xmlResponse);
@@ -286,7 +329,13 @@ void updatePhotocell() {
 
   // discard any send in progress byte
   // and priortize this
-  while(!espSerial.available() && espSerial.read() != PHOTOCELL_CHAR) {}
+  while(!espSerial.available()) {}
+
+  char cmd = '?';
+  do {
+    cmd = espSerial.read();
+  } while (cmd != PHOTOCELL_CHAR);
+
   photocellSensor = espSerial.readStringUntil('\n');
   photocellSensor.trim(); // trim white space
   
@@ -297,7 +346,7 @@ void updatePhotocell() {
 
 void waterPlant() {
   espSerial.print(WATER_CMD_CHAR);
-  server.send(200, "text/plain", "");
+  server.send(200, "text/plain", buf);
 }
 
 void growLightBtn() {
@@ -381,7 +430,7 @@ void SendWebsite() {
   Serial.println("sending web page");
   // you may have to play with this value, big pages need more porcessing time, and hence
   // a longer timeout that 200 ms
-  server.send(200, "text/html", PAGE_MAIN);
+  server.send(2000, "text/html", PAGE_MAIN);
 
 }
 
@@ -394,15 +443,15 @@ void SendXML() {
   strcpy(XML, "<?xml version = '1.0'?>\n<Data>\n");
 
   // send air temp
-  sprintf(buf, "<AT>%d</AT>\n", airTempSensor);
+  sprintf(buf, "<AT>%s</AT>\n", airTempSensor);
   strcat(XML, buf);
 
   // send moisture
-  sprintf(buf, "<M>%d</M>\n", moistureSensor);
+  sprintf(buf, "<M>%s</M>\n", moistureSensor);
   strcat(XML, buf);
 
   // send soil temp
-  sprintf(buf, "<ST>%d</ST>\n", soilTempSensor);
+  sprintf(buf, "<ST>%s</ST>\n", soilTempSensor);
   strcat(XML, buf);
 
   // send photocell
@@ -412,6 +461,9 @@ void SendXML() {
   // send IR
   sprintf(buf, "<IR>%d</IR>\n", isIntrusionDetected ? 1 : 0);
   strcat(XML, buf);
+
+  Serial.println("IR in xml");
+  Serial.println(isIntrusionDetected);
 
   // send water level
   sprintf(buf, "<WL>%s</WL>\n", waterLevel ? "Ok" : "Empty");
@@ -453,7 +505,7 @@ void SendXML() {
 
   // you may have to play with this value, big pages need more porcessing time, and hence
   // a longer timeout that 200 ms
-  server.send(200, "text/xml", XML);
+  server.send(1000, "text/xml", XML);
 }
 
 // print the current wifi status

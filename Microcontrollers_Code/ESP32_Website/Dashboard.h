@@ -1377,7 +1377,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
 
                         <button type="button"
                             class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-2 self-center"
-                            id="rgb-btn" onclick="rgbBtnPress()">Blinking RGB
+                            id="rgb-btn" onclick="rgbBtnPress()">Yellow
                         </button>
                     </div>
 
@@ -1435,9 +1435,9 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     var xmlHttp = createXmlHttpObject();
 
     // var save the config values (not sent yet)
-    var airTempRate = 1;
-    var soilRate = 1;
-    var photocellRate = 1;
+    var airTempRate = 0;
+    var soilRate = 0;
+    var photocellRate = 0;
 
     // function to create XML object
     function createXmlHttpObject() {
@@ -1479,6 +1479,9 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         // then the second arg VALUE is use in the processing function
         // String t_state = server.arg("VALUE");
         // then + the configs value property
+        console.log(airTempRate);
+        console.log(soilRate);
+        console.log(photocellRate);
         xhttp.open(
             "PUT",
             "/config?airTempRate=" +
@@ -1602,7 +1605,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     function rgbBtnPress() {
         var xhttp = new XMLHttpRequest();
 
-        document.getElementById("light-color").innerHTML = "RGB";
+        document.getElementById("light-color").innerHTML = "Yellow";
 
         xhttp.open("PUT", "/rgbBtn", false);
         xhttp.send();
@@ -1654,6 +1657,12 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         // get the xml stream
         xmlResponse = xmlHttp.responseXML;
 
+        console.log(xmlResponse);
+
+        if (xmlResponse == null) {
+            console.log("null");
+        }
+        return;
 
         // Air temp
         xmldoc = xmlResponse.getElementsByTagName("AT");
@@ -1686,6 +1695,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         } else {
             document.getElementById("ir-sensor").innerHTML = "Object Detected!";
         }
+        console.log("hey")
 
         // water level
         xmldoc = xmlResponse.getElementsByTagName("WL");
@@ -1736,7 +1746,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         xmldoc = xmlResponse.getElementsByTagName("BRI");
         message = xmldoc[0].firstChild.nodeValue;
 
-        if (message == 0) {
+        if (message == 1) {
             document.getElementById("brightness-light").innerHTML = "Dim";
         } else {
             document.getElementById("brightness-light").innerHTML = "Bright";
@@ -1758,11 +1768,11 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         if (xmlHttp.readyState == 0 || xmlHttp.readyState == 4) {
             xmlHttp.open("PUT", "xml", true);
             xmlHttp.onreadystatechange = response;
-            xmlHttp.send(null);
+            // xmlHttp.send(XML);
         }
         // you may have to play with this value, big pages need more porcessing time,
         // and hence, a longer timeout
-        setTimeout("process()", 100);
+        setTimeout("process()", 2000);
     }
 
 </script>

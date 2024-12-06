@@ -3,7 +3,7 @@
 #include <SoftwareSerial.h>
 #include <DHT.h>
 #include <Wire.h>
-#include <Adafruit_PM25AQI.h>
+// #include <Adafruit_PM25AQI.h>
 
 // sensors pins
 #define photocellPin A0
@@ -17,6 +17,9 @@
 #define humidityPin 18
 #define waterSensor A15
 #define flamePin A2
+#define smokePin 9
+#define moisturePin A3
+#define pumpPin 12
 
 // bluetooth communication char
 #define PHOTOCELL_CHAR 'A'
@@ -28,18 +31,33 @@
 #define IR_SENSOR3 'G'
 #define IR_SENSOR4 'H'
 #define IR_SENSOR5 'Z'
+#define INTRUSION_DETECTED_CHAR 'I'
 #define WATER_LEVEL_CHAR 'J'
 #define HUMIDITY_CHAR 'K'
 #define SOUND_SENSOR 'L'
 #define SMOKE_SENSOR 'M'
 #define FLAME_SENSOR 'N'
+#define WATER_CMD_CHAR 'O'
+#define TOGGLE_LED_CHAR 'P'
+#define LED_BRIGHTNESS_CHAR 'Q'
+#define LED_RED_CHAR 'R'
+#define LED_GREEN_CHAR 'S'
+#define LED_BLUE_CHAR 'T'
+#define LED_RGB_CHAR 'U'
+#define BUZZER_CMD_CHAR 'V'
+#define WRITE_DISPLAY_CHAR 'W'
+#define CLEAR_DISPLAY_CHAR 'X'
+#define CONFIG_CHAR 'Y'
 
 #define DHTTYPE DHT11
 
-Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
+// Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
 
 volatile bool objectPresentSensor1 = false;
 bool objectPresentSensor2 = false;
+
+bool pumpOn = false;
+uint32_t pumpStart = 0;
 
 DHT dht(humidityPin, DHTTYPE);
 Adafruit_seesaw ss;
@@ -67,9 +85,12 @@ void setup()
   pinMode(flamePin, INPUT);
 
   ss.begin(0x36);
-  aqi.begin_I2C();
+  // aqi.begin_I2C();
   // OUTPUT
   pinMode(buzzerPin, OUTPUT);
+
+  pinMode(pumpPin, OUTPUT);
+  // digitalWrite(pumpPin, HIGH);
 
   // IR sensor
   // attachInterrupt(digitalPinToInterrupt(irSensor1), irSensor1_ISR, FALLING); 
@@ -85,7 +106,7 @@ void loop()
   } else {
     noTone(buzzerPin);
   }
-  PM25_AQI_Data data;
+  // PM25_AQI_Data data;
   // TODO: uncomment later
   // if (BTSerial.available()) {
   //   Serial.println(BTSerial.read() - '0');
@@ -141,6 +162,7 @@ void loop()
     if (BT == PHOTOCELL_CHAR) {
       // data send protocol for the photocell resistor
       uint16_t photocell = analogRead(photocellPin);
+      // Serial.println(photocell);
       uint8_t hi = photocell >> 8;
       uint8_t lo = photocell & 0xFF;
       // send first byte
@@ -149,21 +171,27 @@ void loop()
       // while (!BTSerial.available()) {}
       // send second byte
       BTSerial.write(lo);
+      // Serial.println(hi);
+      // Serial.println(lo);
     } else if (BT == TEMP_CHAR) {
       // data send protocol for the temperature sensor
       uint8_t tempReading = analogRead(temperaturePin);
       BTSerial.write(tempReading);
+      Serial.println(tempReading);
     } else if (BT == MOISTURE_CHAR) {
       // data send protocol for the photocell resistor
       uint16_t moisture = ss.touchRead(0);
-      uint8_t hi = moisture >> 8;
-      uint8_t lo = moisture & 0xFF;
+      //uint8_t moisture = ss.touchRead(0) / 8;
+      Serial.println("moisture: ");
+      Serial.println(moisture);
+      // uint8_t hi = moisture >> 8;
+      // uint8_t lo = moisture & 0xFF;
       // send first byte
-      BTSerial.write(hi);
+      BTSerial.write(moisture);
       // wait for ack
       // while (!BTSerial.available()) {}
       // send second byte
-      BTSerial.write(lo);
+      // BTSerial.write(lo);
     } else if (BT == TEMP_SOIL_CHAR) {
       // data send protocol for the temperature sensor
       // attached to the moisture sensor
@@ -217,15 +245,15 @@ void loop()
       BTSerial.write(lo);
       
     } 
-    // else if (BT == SMOKE_SENSOR) {
-    //   // data send protocol for the fourth IR sensor
-    //   // sends H or L for high or low
-    //   if (digitalRead(smokePin) == HIGH) {
-    //     BTSerial.write('H');
-    //   } else {
-    //     BTSerial.write('L');
-    //   }
-    // } 
+    else if (BT == SMOKE_SENSOR) {
+      // data send protocol for the fourth IR sensor
+      // sends H or L for high or low
+      if (digitalRead(smokePin) == HIGH) {
+        BTSerial.write('H');
+      } else {
+        BTSerial.write('L');
+      }
+    } 
     else if (BT == FLAME_SENSOR) {
       // data send protocol for the fourth IR sensor
       // sends H or L for high or low
@@ -239,16 +267,27 @@ void loop()
       }
     } else if (BT == WATER_LEVEL_CHAR) {
       int sensorReading = analogRead(waterSensor);
-      if (sensorReading < 10) {
+      if (sensorReading < 100) {
         BTSerial.write('L');
       } else {
         BTSerial.write('H');
       }
-      }
+    } else if (BT == WATER_CMD_CHAR) {
+      digitalWrite(pumpPin, HIGH);
+      pumpStart = millis();
+      pumpOn = true;
     } else {
       // command char not recognized, do nothing
       // Serial.println("char not recognized");
     }
+
+    if (pumpOn && (millis() - pumpStart > 5000)) {
+    //noInterrupts();
+    digitalWrite(pumpPin, LOW);
+    //interrupts();
+    pumpOn = false;
+    }
+  }
 }
 
 
