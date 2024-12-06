@@ -80,16 +80,16 @@ bool smokeReading = 0;
 bool flameReading = 0;
 bool waterReading = 0;
 
-int photocellPeriod = 0;
-int tempPeriod = 0;
+int photocellPeriod = 4;
+int tempPeriod = 5;
 int moisturePeriod = 0;
 int tempSoilPeriod = 0;
 int IR1Period = 0;
 int IR2Period = 0;
 int IR3Period = 0;
 int IR4Period = 0;
-int IR5Period = 5;
-int waterPeriod = 0;
+int IR5Period = 3;
+int waterPeriod = 2;
 int flamePeriod = 0;
 int smokePeriod = 0;
 
@@ -268,6 +268,7 @@ void loop()
     }
 
     else if (cmd == LED_RED_CHAR) {
+      Serial.println("Here")
       ledColor = 'R';
       
       if (isLedOn) {
@@ -399,7 +400,7 @@ void loop()
     uint8_t convertedTemp = convertTemperatureSensor();
 
     Serial1.print(TEMP_CHAR);
-    Serial1.print(convertedTemp); // send to website
+    Serial1.println(convertedTemp); // send to website
   }
   // if (readMoisture) {
   //   requestMoisture();
@@ -536,7 +537,7 @@ void loop()
     requestWater();
 
     Serial1.print(WATER_LEVEL_CHAR);
-    Serial1.println(waterReading);
+    Serial1.println(String(waterReading));
 
     if (waterReading == false) {
       Serial.println("water is empty");
@@ -590,19 +591,21 @@ void loop()
   if (photocellReading != 0 && photocellReading < 300) {
     // if the user manually turn it off, don't turn it on
     if (!isLedManual && !isLedOn) {
-      turnOnLED();
+      toggleLED();
 
       // send to esp32
       Serial1.print(TOGGLE_LED_CHAR);
       Serial1.println("1");
 
     }
-  } else if (photocellReading >= 300) {
+  }
+  if (photocellReading >= 300) {
+    // Serial.print(isLedOn);
     // light, turn off
     // also, if user manually turn it on, don't turn
     // it off
     if (!isLedManual && isLedOn) {
-      turnOffLED();
+      toggleLED();
 
       // send to esp32
       Serial1.print(TOGGLE_LED_CHAR);
@@ -611,32 +614,32 @@ void loop()
   }
 
   // if led on and is blinking rgb
-  if (isLedOn && ledColor == 'A') {
-    // check if 3s has passed
-    if (millis() - ledRGBstart > 3000) {
-      // switch to the next color & save the previous color
-      uint8_t currentPin = ledBlue;
-      switch (allColorCurrent) {
-        case 'R':
-          currentPin = ledBlue;
-          allColorCurrent = ledGreen;
-          break;
+  // if (isLedOn && ledColor == 'A') {
+  //   // check if 3s has passed
+  //   if (millis() - ledRGBstart > 3000) {
+  //     // switch to the next color & save the previous color
+  //     uint8_t currentPin = ledBlue;
+  //     switch (allColorCurrent) {
+  //       case 'R':
+  //         currentPin = ledBlue;
+  //         allColorCurrent = ledGreen;
+  //         break;
 
-        case 'G':
-          currentPin = ledGreen;
-          allColorCurrent = ledBlue;
-          break;
+  //       case 'G':
+  //         currentPin = ledGreen;
+  //         allColorCurrent = ledBlue;
+  //         break;
 
-        case 'B':
-          currentPin = ledBlue;
-          allColorCurrent = ledRed;
-          break;
-      }
+  //       case 'B':
+  //         currentPin = ledBlue;
+  //         allColorCurrent = ledRed;
+  //         break;
+  //     }
 
-      // turn the next color on
-      turnNextColor(currentPin, allColorCurrent);
-    }
-  }
+  //     // turn the next color on
+  //     turnNextColor(currentPin, allColorCurrent);
+  //   }
+  // }
 
   // buzzer
   if (isBuzzerOn && (millis() - buzzerStart > 2000)) {
@@ -829,7 +832,7 @@ int convertTemperatureSensor() {
                                                 //to degrees ((voltage - 500mV) times 100)
   
   // convert to Fahrenheit
-  float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
+  float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0 - 20.0;
 
   // change to int
   int returnTemp = (int) temperatureF;

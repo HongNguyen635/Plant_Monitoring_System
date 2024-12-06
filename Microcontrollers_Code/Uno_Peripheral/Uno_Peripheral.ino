@@ -267,6 +267,7 @@ void loop()
       }
     } else if (BT == WATER_LEVEL_CHAR) {
       int sensorReading = analogRead(waterSensor);
+      Serial.println(sensorReading);
       if (sensorReading < 100) {
         BTSerial.write('L');
       } else {

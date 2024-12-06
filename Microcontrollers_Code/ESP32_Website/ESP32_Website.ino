@@ -13,7 +13,7 @@
 
 // test with home wifi
 #define LOCAL_SSID ""
-#define LOCAL_PASS ""
+#define LOCAL_PASS "!"
 
 // once read to go live these settings are what the client will connect to
 // (name & pass of the access point)
@@ -201,6 +201,9 @@ void loop() {
     else if (cmd == WATER_LEVEL_CHAR) {
       String reading = espSerial.readStringUntil('\n');
       reading.trim();
+
+      Serial.println("Here, water reading: ");
+      Serial.println(waterLevel);
       
       waterLevel = reading.toInt();
     }
@@ -232,7 +235,12 @@ void loop() {
       String reading = espSerial.readStringUntil('\n');
       reading.trim();
 
+      
+
       isLightOn = reading.toInt();
+
+      Serial.println("uslightom");
+      Serial.println(isLightOn);
     }
 
     // else if (cmd == LED_BRIGHTNESS_CHAR) {
@@ -242,10 +250,10 @@ void loop() {
     //   isLightDim = reading.toInt();
     // }
 
-    // else if (cmd == LED_RGB_CHAR) {
-    //   ledColor = espSerial.readStringUntil('\n');
-    //   ledColor.trim();
-    // }
+    else if (cmd == LED_RGB_CHAR) {
+      ledColor = espSerial.readStringUntil('\n');
+      ledColor.trim();
+    }
     
   }
 
@@ -494,7 +502,7 @@ void SendXML() {
   strcat(XML, buf);
 
   // send led color
-  sprintf(buf, "<CO>%d</CO>\n", ledColor);
+  sprintf(buf, "<CO>%s</CO>\n", ledColor);
   strcat(XML, buf);
 
   strcat(XML, "</Data>\n");
@@ -505,7 +513,7 @@ void SendXML() {
 
   // you may have to play with this value, big pages need more porcessing time, and hence
   // a longer timeout that 200 ms
-  server.send(1000, "text/xml", XML);
+  server.send(2000, "text/xml", XML);
 }
 
 // print the current wifi status

@@ -58,8 +58,7 @@
 // note R"KEYWORD( html page code )KEYWORD"; 
 // again I hate strings, so char is it and this method let's us write naturally
 
-const char PAGE_MAIN[] PROGMEM = R"=====(
-<!DOCTYPE html>
+const char PAGE_MAIN[] PROGMEM = R"=====(<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -1195,25 +1194,6 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
                     </div>
                 </li>
 
-                <!-- humidity sensor -->
-                <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
-                    <div class="flex justify-between">
-                        <h3 class="mt-2 text-xl font-semibold">Humidity</h3>
-                        <h3 class="text-2xl font-semibold">&#9729;</h3>
-
-                    </div>
-                    <div class="flex justify-between mt-2">
-                        <span>
-                            Current:
-                        </span>
-                        <span id="humidity-sensor">
-                            0
-                        </span>
-                        <span>
-                            %
-                        </span>
-                    </div>
-                </li>
 
                 <!-- smoke sensor -->
                 <li class="w-2/3 sm:w-2/5 sm:max-w-[18rem] flex flex-col bg-white py-6 px-6 rounded-3xl shadow-xl">
@@ -1308,14 +1288,6 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
                         <h3 class="text-2xl font-semibold">&#128161;</h3>
 
                     </div>
-                    <div class="flex justify-between mt-2">
-                        <span>
-                            Current:
-                        </span>
-                        <span id="grow-light">
-                            Off
-                        </span>
-                    </div>
 
                     <button type="button"
                         class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-4 self-center"
@@ -1377,7 +1349,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
 
                         <button type="button"
                             class="font-semibold text-base bg-emerald-200  hover:bg-emerald-300 transition hover:duration-300 ease-in-out inline-flex items-center rounded-full justify-center pb-3 p-2 px-6 min-w-fit max-w-fit mt-2 self-center"
-                            id="rgb-btn" onclick="rgbBtnPress()">Yellow
+                            id="rgb-btn" onclick="rgbBtnPress()">White
                         </button>
                     </div>
 
@@ -1605,7 +1577,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     function rgbBtnPress() {
         var xhttp = new XMLHttpRequest();
 
-        document.getElementById("light-color").innerHTML = "Yellow";
+        document.getElementById("light-color").innerHTML = "White";
 
         xhttp.open("PUT", "/rgbBtn", false);
         xhttp.send();
@@ -1655,14 +1627,17 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         var xmldoc;
 
         // get the xml stream
-        xmlResponse = xmlHttp.responseXML;
+        // xmlResponse = xmlHttp.responseXML;
+
+        var parser = new DOMParser();
+        xmlResponse = parser.parseFromString(xmlHttp.responseText, "text/xml");
 
         console.log(xmlResponse);
 
         if (xmlResponse == null) {
             console.log("null");
         }
-        return;
+        // return;
 
         // Air temp
         xmldoc = xmlResponse.getElementsByTagName("AT");
@@ -1690,7 +1665,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         xmldoc = xmlResponse.getElementsByTagName("IR");
         message = xmldoc[0].firstChild.nodeValue;
 
-        if (message == 0) {
+        if (message == 1) {
             document.getElementById("ir-sensor").innerHTML = "Clear";
         } else {
             document.getElementById("ir-sensor").innerHTML = "Object Detected!";
@@ -1736,7 +1711,7 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         xmldoc = xmlResponse.getElementsByTagName("LED");
         message = xmldoc[0].firstChild.nodeValue;
 
-        if (message == 0) {
+        if (message == 1) {
             document.getElementById("grow-light").innerHTML = "On";
         } else {
             document.getElementById("grow-light").innerHTML = "Off";
@@ -1765,11 +1740,11 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
     // otherwise the page will not request XML from the ESP,
     // and updates will not happen
     function process() {
-        if (xmlHttp.readyState == 0 || xmlHttp.readyState == 4) {
+        
             xmlHttp.open("PUT", "xml", true);
             xmlHttp.onreadystatechange = response;
-            // xmlHttp.send(XML);
-        }
+            xmlHttp.send(null);
+        
         // you may have to play with this value, big pages need more porcessing time,
         // and hence, a longer timeout
         setTimeout("process()", 2000);
