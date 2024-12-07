@@ -12,13 +12,13 @@
 #define USE_INTRANET // comment this line out when go live
 
 // test with home wifi
-#define LOCAL_SSID "DonaldWiFi"
-#define LOCAL_PASS "2121685!"
+#define LOCAL_SSID "Wifi_ID"
+#define LOCAL_PASS "Wifi_pass"
 
 // once read to go live these settings are what the client will connect to
 // (name & pass of the access point)
 #define AP_SSID "PlantMonitoringDashboard"
-#define AP_PASS "1234567890"
+#define AP_PASS "5647382910"
 
 // TODO: define the arduino pins for communication
 #define RX2 16
